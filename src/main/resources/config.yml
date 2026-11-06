@@ -1,0 +1,38 @@
+settings:
+  prefix: "&8[&5DeluxeBounties&8] "
+  language: "es_ES"
+
+database:
+  type: SQLITE
+  file: "bounties.db"
+
+economy:
+  provider: EconomyAPI
+  currency-symbol: "$"
+
+bounty:
+  minimum-amount: 100
+  maximum-amount: 10000000
+  maximum-active-per-player: 10
+
+  allow-anonymous: true
+  allow-cancellation: true
+  cancellation-refund-percent: 100
+
+  claim-mode: ALL
+
+antifarm:
+  enabled: true
+  kill-cooldown-seconds: 150
+  prevent-self-bounty: true
+  prevent-self-kill: true
+  prevent-environmental-kills: true
+
+notifications:
+  broadcast-bounty-claimed: true
+  notify-target: true
+  notify-hunter: true
+
+leaderboard:
+  enabled: true
+  entries: 10

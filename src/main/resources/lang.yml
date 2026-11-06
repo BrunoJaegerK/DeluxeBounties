@@ -1,0 +1,23 @@
+prefix: "&8[&5DeluxeBounties&8] "
+
+general:
+  no-permission: "&cNo tienes permiso."
+  player-only: "&cEste comando solo puede utilizarse dentro del juego."
+  player-not-found: "&cJugador no encontrado."
+  invalid-amount: "&cCantidad inválida."
+
+bounty:
+  created: "&aHas colocado una recompensa de &e{amount} &asobre &f{target}&a."
+  received: "&c¡Tienes una recompensa de &e{amount}&c!"
+  cancelled: "&aHas recuperado &e{amount}&a."
+  self-target: "&cNo puedes colocarte una recompensa."
+  insufficient-funds: "&cNo tienes dinero suficiente."
+  target-has-none: "&cEste jugador no tiene recompensas."
+
+claim:
+  success-hunter: "&aHas eliminado a &f{target}&a y recibido &e{amount}&a."
+  success-target: "&cTu recompensa fue reclamada por &f{hunter}&c."
+  antifarm: "&cDebes esperar antes de volver a reclamar una recompensa de este jugador."
+
+admin:
+  reload: "&aConfiguración recargada correctamente."

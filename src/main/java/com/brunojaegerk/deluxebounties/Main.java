@@ -2,6 +2,9 @@ package com.brunojaegerk.deluxebounties;
 
 import cn.nukkit.plugin.PluginBase;
 import com.brunojaegerk.deluxebounties.database.DatabaseManager;
+import com.brunojaegerk.deluxebounties.economy.EconomyManager;
+import com.brunojaegerk.deluxebounties.manager.BountyService;
+import com.brunojaegerk.deluxebounties.command.BountyCommand;
 
 import java.sql.SQLException;
 
@@ -10,10 +13,11 @@ public final class Main extends PluginBase {
     private static Main instance;
 
     private DatabaseManager databaseManager;
+    private EconomyManager economyManager;
+    private BountyService bountyService;
 
     @Override
     public void onEnable() {
-
         instance = this;
 
         saveDefaultResources();
@@ -23,15 +27,14 @@ public final class Main extends PluginBase {
         getLogger().info("§7  Advanced Bounty System");
         getLogger().info("§d================================");
 
+        // Inicializar SQLite
         try {
             databaseManager = new DatabaseManager(this);
             databaseManager.initialize();
 
-            getLogger().info("§aPlugin habilitado correctamente.");
-            getLogger().info("§7Versión: " + getDescription().getVersion());
+            getLogger().info("§aBase de datos SQLite inicializada.");
 
         } catch (SQLException exception) {
-
             getLogger().error(
                     "No se pudo inicializar DeluxeBounties.",
                     exception
@@ -42,6 +45,37 @@ public final class Main extends PluginBase {
                     exception
             );
         }
+
+        // Inicializar EconomyAPI
+        try {
+            economyManager = new EconomyManager();
+
+            getLogger().info("§aEconomyAPI conectada correctamente.");
+
+        } catch (IllegalStateException exception) {
+            economyManager = null;
+
+            getLogger().warning(
+                    "EconomyAPI no está disponible. "
+                            + "Las operaciones económicas estarán desactivadas."
+            );
+        }
+
+        bountyService = new BountyService(this);
+
+        getLogger().info("§aBountyService inicializado correctamente.");
+
+        getLogger().info("§aDeluxeBounties habilitado correctamente.");
+        getLogger().info(
+                "§7Versión: " + getDescription().getVersion()
+        );
+
+        getServer().getCommandMap().register(
+                "deluxebounties",
+                new BountyCommand(this)
+        );
+
+        getLogger().info("§aComando /bounty registrado correctamente.");
     }
 
     @Override
@@ -50,6 +84,7 @@ public final class Main extends PluginBase {
         if (databaseManager != null) {
             try {
                 databaseManager.close();
+
             } catch (SQLException exception) {
                 getLogger().error(
                         "Error al cerrar la base de datos.",
@@ -74,6 +109,18 @@ public final class Main extends PluginBase {
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
+    }
+
+    public boolean isEconomyAvailable() {
+        return economyManager != null;
+    }
+
+    public BountyService getBountyService() {
+        return bountyService;
     }
 }
 

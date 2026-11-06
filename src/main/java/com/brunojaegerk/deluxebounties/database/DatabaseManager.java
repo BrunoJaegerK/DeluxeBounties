@@ -1,9 +1,9 @@
-package com.brunojaegerk.database;
+package com.brunojaegerk.deluxebounties.database;
 
 import cn.nukkit.utils.Config;
 import com.brunojaegerk.deluxebounties.Main;
-import com.brunojaegerk.bounty.Bounty;
-import com.brunojaegerk.bounty.BountyStatus;
+import com.brunojaegerk.deluxebounties.bounty.Bounty;
+import com.brunojaegerk.deluxebounties.bounty.BountyStatus;
 
 import java.io.File;
 import java.sql.*;

@@ -1,0 +1,14 @@
+name: DeluxeBounties
+main: com.brunojaegerk.deluxebounties.Main
+version: "1.0.0"
+api: ["1.0.0"]
+author: BrunoJaegerK
+description: Advanced player bounty system for DeluxeMine Network
+
+load: POSTWORLD
+
+depend:
+  - FormConstructor
+
+softdepend:
+  - EconomyAPI

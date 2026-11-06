@@ -1,4 +1,4 @@
-package com.brunojaegerk.bounty;
+package com.brunojaegerk.deluxebounties.bounty;
 
 import java.util.UUID;
 
