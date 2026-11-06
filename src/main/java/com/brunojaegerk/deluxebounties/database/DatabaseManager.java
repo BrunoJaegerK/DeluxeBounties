@@ -6,6 +6,7 @@ import com.brunojaegerk.deluxebounties.bounty.Bounty;
 import com.brunojaegerk.deluxebounties.bounty.BountyStatus;
 import com.brunojaegerk.deluxebounties.bounty.BountyClaimResult;
 import com.brunojaegerk.deluxebounties.bounty.HunterStats;
+import com.brunojaegerk.deluxebounties.bounty.BountyHistoryEntry;
 
 import java.io.File;
 import java.sql.*;
@@ -725,6 +726,68 @@ public final class DatabaseManager {
         }
 
         return hunters;
+    }
+
+    public synchronized List<BountyHistoryEntry> getPlayerHistory(
+            UUID playerUUID,
+            int limit,
+            int offset
+    ) throws SQLException {
+
+        if (playerUUID == null || limit <= 0 || limit > 100 || offset < 0) {
+            throw new IllegalArgumentException(
+                    "Los parámetros del historial no son válidos."
+            );
+        }
+
+        List<BountyHistoryEntry> history = new ArrayList<>();
+
+        String sql = """
+            SELECT
+                id,
+                event_type,
+                actor_uuid,
+                actor_name,
+                target_uuid,
+                target_name,
+                amount,
+                created_at,
+                details
+            FROM bounty_history
+            WHERE actor_uuid = ?
+            ORDER BY created_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, playerUUID.toString());
+            statement.setInt(2, limit);
+            statement.setInt(3, offset);
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+
+                    String actorUUID = result.getString("actor_uuid");
+                    String targetUUID = result.getString("target_uuid");
+
+                    history.add(new BountyHistoryEntry(
+                            result.getLong("id"),
+                            result.getString("event_type"),
+                            actorUUID == null ? null : UUID.fromString(actorUUID),
+                            result.getString("actor_name"),
+                            targetUUID == null ? null : UUID.fromString(targetUUID),
+                            result.getString("target_name"),
+                            result.getDouble("amount"),
+                            result.getLong("created_at"),
+                            result.getString("details")
+                    ));
+                }
+            }
+        }
+
+        return history;
     }
 
     public synchronized void close() throws SQLException {

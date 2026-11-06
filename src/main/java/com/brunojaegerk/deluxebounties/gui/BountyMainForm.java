@@ -6,6 +6,7 @@ import com.brunojaegerk.deluxebounties.Main;
 import com.formconstructor.form.SimpleForm;
 import com.brunojaegerk.deluxebounties.gui.BountyCreateForm;
 import com.brunojaegerk.deluxebounties.gui.BountyTopForm;
+import com.brunojaegerk.deluxebounties.gui.BountyHistoryForm;
 
 public final class BountyMainForm {
 
@@ -47,6 +48,12 @@ public final class BountyMainForm {
                 "§dTop cazadores\n§7Ranking de jugadores",
                 (target, button) ->
                         new BountyTopForm(plugin).send(target)
+        );
+
+        form.addButton(
+                "§eMi historial\n§7Consultar mis operaciones",
+                (target, button) ->
+                        new BountyHistoryForm(plugin).send(target)
         );
 
         form.setCloseHandler(target -> {

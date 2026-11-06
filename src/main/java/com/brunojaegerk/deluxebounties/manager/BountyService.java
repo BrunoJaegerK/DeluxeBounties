@@ -5,6 +5,7 @@ import com.brunojaegerk.deluxebounties.bounty.Bounty;
 import com.brunojaegerk.deluxebounties.database.DatabaseManager;
 import com.brunojaegerk.deluxebounties.bounty.BountyClaimResult;
 import com.brunojaegerk.deluxebounties.bounty.HunterStats;
+import com.brunojaegerk.deluxebounties.bounty.BountyHistoryEntry;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -447,6 +448,25 @@ public final class BountyService {
             throws SQLException {
 
         return databaseManager.getTopHunters(limit);
+    }
+
+    public List<BountyHistoryEntry> getPlayerHistory(
+            UUID playerUUID,
+            int limit,
+            int offset
+    ) throws SQLException {
+
+        if (playerUUID == null) {
+            throw new IllegalArgumentException(
+                    "El UUID del jugador no puede ser nulo."
+            );
+        }
+
+        return databaseManager.getPlayerHistory(
+                playerUUID,
+                limit,
+                offset
+        );
     }
 }
 
