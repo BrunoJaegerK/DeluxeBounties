@@ -177,6 +177,119 @@ public final class BountyService {
         }
     }
 
+    public boolean cancelBounty(
+            UUID creatorUUID,
+            String creatorName,
+            long bountyId
+    ) throws SQLException {
+
+        if (creatorUUID == null || creatorName == null || bountyId <= 0) {
+            throw new IllegalArgumentException(
+                    "Los datos de cancelación no son válidos."
+            );
+        }
+
+        if (!plugin.getConfig().getBoolean(
+                "bounty.allow-cancellation", true)) {
+
+            throw new IllegalStateException(
+                    "La cancelación de recompensas está desactivada."
+            );
+        }
+
+        if (!plugin.isEconomyAvailable()) {
+            throw new IllegalStateException(
+                    "El sistema económico no está disponible."
+            );
+        }
+
+        // Recuperar la recompensa activa del propietario
+        Bounty bounty = databaseManager.getActiveBountyById(
+                bountyId,
+                creatorUUID
+        );
+
+        if (bounty == null) {
+            throw new IllegalStateException(
+                    "No existe una recompensa activa con ese ID "
+                            + "a tu nombre."
+            );
+        }
+
+        double refundAmount = bounty.getAmount();
+
+        // Devolver el 100 % de la aportación
+        boolean refunded = plugin.getEconomyManager().deposit(
+                creatorUUID,
+                refundAmount
+        );
+
+        if (!refunded) {
+            throw new IllegalStateException(
+                    "No se pudo devolver el dinero. "
+                            + "La recompensa permanece activa."
+            );
+        }
+
+        // Cambiar el estado de la recompensa en SQLite
+        try {
+            boolean cancelled = databaseManager.cancelBounty(
+                    bountyId,
+                    creatorUUID
+            );
+
+            if (!cancelled) {
+                rollbackRefund(creatorUUID, creatorName, refundAmount);
+
+                throw new IllegalStateException(
+                        "No se pudo cancelar la recompensa. "
+                                + "Se intentó revertir el reembolso."
+                );
+            }
+
+            plugin.getLogger().info(
+                    "Recompensa #" + bountyId
+                            + " cancelada por " + creatorName
+                            + ". Reembolso: " + refundAmount
+            );
+
+            return true;
+
+        } catch (SQLException | RuntimeException exception) {
+
+            rollbackRefund(creatorUUID, creatorName, refundAmount);
+            throw exception;
+        }
+    }
+
+    private void rollbackRefund(
+            UUID creatorUUID,
+            String creatorName,
+            double amount
+    ) {
+
+        try {
+            boolean withdrawn = plugin.getEconomyManager().withdraw(
+                    creatorUUID,
+                    amount
+            );
+
+            if (!withdrawn) {
+                plugin.getLogger().error(
+                        "¡ATENCIÓN! No se pudo revertir el reembolso "
+                                + "de " + amount + " al jugador "
+                                + creatorName + " (UUID: " + creatorUUID + ")."
+                );
+            }
+
+        } catch (RuntimeException exception) {
+            plugin.getLogger().error(
+                    "Error al revertir el reembolso de la recompensa.",
+                    exception
+            );
+        }
+    }
+
     private double getConfigNumber(String path, double defaultValue) {
         Object value = plugin.getConfig().get(path, defaultValue);
 

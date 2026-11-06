@@ -68,6 +68,16 @@ public final class BountyCommand extends Command {
                 createBounty(sender, args);
                 return true;
             }
+
+            case "cancel" -> {
+                if (args.length != 2) {
+                    sender.sendMessage("§cUso: /bounty cancel <id>");
+                    return true;
+                }
+
+                cancelBounty(sender, args[1]);
+                return true;
+            }
         }
     }
 
@@ -261,6 +271,60 @@ public final class BountyCommand extends Command {
         );
         sender.sendMessage("§d/bounty list <jugador>");
         sender.sendMessage("§d/bounty top");
+        sender.sendMessage("§d/bounty cancel <id>");
+    }
+
+
+    private void cancelBounty(CommandSender sender, String idArgument) {
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(
+                    "§cSolo los jugadores pueden cancelar recompensas."
+            );
+            return;
+        }
+
+        long bountyId;
+
+        try {
+            bountyId = Long.parseLong(idArgument);
+        } catch (NumberFormatException exception) {
+            sender.sendMessage("§cEl ID de la recompensa no es válido.");
+            return;
+        }
+
+        try {
+            boolean cancelled = plugin.getBountyService().cancelBounty(
+                    player.getUniqueId(),
+                    player.getName(),
+                    bountyId
+            );
+
+            if (cancelled) {
+                sender.sendMessage(
+                        "§aHas cancelado la recompensa §f#" + bountyId
+                );
+
+                sender.sendMessage(
+                        "§7Se ha devuelto el 100 % de tu aportación."
+                );
+            }
+
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+
+            sender.sendMessage("§c" + exception.getMessage());
+
+        } catch (SQLException exception) {
+
+            plugin.getLogger().error(
+                    "Error al cancelar la recompensa #" + bountyId,
+                    exception
+            );
+
+            sender.sendMessage(
+                    "§cOcurrió un error al cancelar la recompensa."
+            );
+        }
     }
 }
 

@@ -295,6 +295,34 @@ public final class DatabaseManager {
         return bounties;
     }
 
+    public synchronized Bounty getActiveBountyById(
+            long bountyId,
+            UUID creatorUUID
+    ) throws SQLException {
+
+        String sql = """
+            SELECT *
+            FROM bounties
+            WHERE id = ?
+            AND creator_uuid = ?
+            AND status = 'ACTIVE'
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setLong(1, bountyId);
+            statement.setString(2, creatorUUID.toString());
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return mapBounty(result);
+                }
+            }
+        }
+
+        return null;
+    }
+
     public synchronized double getActiveBountyTotal(
             UUID targetUUID
     ) throws SQLException {
