@@ -32,24 +32,14 @@ public final class BountyMainForm {
                         new BountyCreateForm(plugin).send(target)
         );
 
-        form.addButton(
-                "§6Recompensas activas\n§7Consultar objetivos",
-                (target, button) -> {
-                    target.sendMessage(
-                            "§eLa lista de recompensas activas "
-                                    + "se implementará próximamente."
-                    );
-                }
+        form.addButton("§6Recompensas activas\n§7Consultar objetivos",
+                (target, button) ->
+                        new BountyListForm(plugin).send(target)
         );
 
-        form.addButton(
-                "§bMis recompensas\n§7Consultar mis aportaciones",
-                (target, button) -> {
-                    target.sendMessage(
-                            "§eEl historial de tus recompensas "
-                                    + "se implementará próximamente."
-                    );
-                }
+        form.addButton("§bMis recompensas\n§7Consultar mis aportaciones",
+                (target, button) ->
+                        new BountyMyForm(plugin).send(target)
         );
 
         form.addButton(

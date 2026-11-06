@@ -269,6 +269,43 @@ public final class DatabaseManager {
         return bounties;
     }
 
+    public synchronized List<Bounty> getAllActiveBounties(
+            int limit,
+            int offset
+    ) throws SQLException {
+
+        if (limit <= 0 || limit > 100 || offset < 0) {
+            throw new IllegalArgumentException(
+                    "Los parámetros de paginación no son válidos."
+            );
+        }
+
+        List<Bounty> bounties = new ArrayList<>();
+
+        String sql = """
+            SELECT *
+            FROM bounties
+            WHERE status = 'ACTIVE'
+            ORDER BY created_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, limit);
+            statement.setInt(2, offset);
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+                    bounties.add(mapBounty(result));
+                }
+            }
+        }
+
+        return bounties;
+    }
+
     public synchronized List<Bounty> getActiveBountiesByCreator(
             UUID creatorUUID
     ) throws SQLException {

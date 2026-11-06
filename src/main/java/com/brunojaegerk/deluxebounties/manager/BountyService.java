@@ -299,5 +299,28 @@ public final class BountyService {
 
         return defaultValue;
     }
+
+    public List<Bounty> getAllActiveBounties(
+            int limit,
+            int offset
+    ) throws SQLException {
+
+        return databaseManager.getAllActiveBounties(
+                limit,
+                offset
+        );
+    }
+
+    public List<Bounty> getMyActiveBounties(UUID creatorUUID)
+            throws SQLException {
+
+        if (creatorUUID == null) {
+            throw new IllegalArgumentException(
+                    "El UUID del creador no puede ser nulo."
+            );
+        }
+
+        return databaseManager.getActiveBountiesByCreator(creatorUUID);
+    }
 }
 
