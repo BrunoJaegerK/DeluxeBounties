@@ -6,6 +6,7 @@ import cn.nukkit.command.CommandSender;
 
 import com.brunojaegerk.deluxebounties.Main;
 import com.brunojaegerk.deluxebounties.bounty.Bounty;
+import com.brunojaegerk.deluxebounties.gui.BountyMainForm;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -40,7 +41,13 @@ public final class BountyCommand extends Command {
         }
 
         if (args.length == 0) {
-            sendHelp(sender);
+
+            if (!(sender instanceof Player player)) {
+                sendHelp(sender);
+                return true;
+            }
+
+            new BountyMainForm(plugin).send(player);
             return true;
         }
 
