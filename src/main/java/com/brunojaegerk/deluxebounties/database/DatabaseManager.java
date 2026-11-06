@@ -4,6 +4,8 @@ import cn.nukkit.utils.Config;
 import com.brunojaegerk.deluxebounties.Main;
 import com.brunojaegerk.deluxebounties.bounty.Bounty;
 import com.brunojaegerk.deluxebounties.bounty.BountyStatus;
+import com.brunojaegerk.deluxebounties.bounty.BountyClaimResult;
+import com.brunojaegerk.deluxebounties.bounty.HunterStats;
 
 import java.io.File;
 import java.sql.*;
@@ -514,6 +516,215 @@ public final class DatabaseManager {
                 BountyStatus.valueOf(result.getString("status")),
                 result.getLong("created_at")
         );
+    }
+
+    public synchronized BountyClaimResult claimBountiesForTarget(
+            UUID targetUUID,
+            UUID hunterUUID,
+            String hunterName
+    ) throws SQLException {
+
+        if (targetUUID == null || hunterUUID == null
+                || hunterName == null || hunterName.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Los datos de reclamación no son válidos."
+            );
+        }
+
+        if (targetUUID.equals(hunterUUID)) {
+            throw new IllegalArgumentException(
+                    "Un jugador no puede reclamar su propia recompensa."
+            );
+        }
+
+        boolean previousAutoCommit = connection.getAutoCommit();
+
+        try {
+            connection.setAutoCommit(false);
+
+            String selectSql = """
+                SELECT id, target_name, amount
+                FROM bounties
+                WHERE target_uuid = ?
+                AND status = 'ACTIVE'
+                ORDER BY created_at ASC, id ASC
+                """;
+
+            List<Long> bountyIds = new ArrayList<>();
+            List<String> targetNames = new ArrayList<>();
+            List<Double> amounts = new ArrayList<>();
+
+            double totalEarned = 0.0;
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(selectSql)) {
+
+                statement.setString(1, targetUUID.toString());
+
+                try (ResultSet result = statement.executeQuery()) {
+                    while (result.next()) {
+                        double amount = result.getDouble("amount");
+
+                        if (!Double.isFinite(amount) || amount <= 0) {
+                            throw new SQLException(
+                                    "Se encontró una recompensa con un importe inválido."
+                            );
+                        }
+
+                        bountyIds.add(result.getLong("id"));
+                        targetNames.add(result.getString("target_name"));
+                        amounts.add(amount);
+
+                        totalEarned += amount;
+                    }
+                }
+            }
+
+            if (bountyIds.isEmpty()) {
+                connection.rollback();
+                return new BountyClaimResult(0, 0.0);
+            }
+
+            if (!Double.isFinite(totalEarned) || totalEarned <= 0) {
+                throw new SQLException(
+                        "El importe total de las recompensas no es válido."
+                );
+            }
+
+            long claimedAt = System.currentTimeMillis();
+
+            String updateSql = """
+                UPDATE bounties
+                SET status = 'CLAIMED',
+                    claimed_by_uuid = ?,
+                    claimed_by_name = ?,
+                    claimed_at = ?
+                WHERE id = ?
+                AND status = 'ACTIVE'
+                """;
+
+            for (int i = 0; i < bountyIds.size(); i++) {
+
+                try (PreparedStatement statement =
+                             connection.prepareStatement(updateSql)) {
+
+                    statement.setString(1, hunterUUID.toString());
+                    statement.setString(2, hunterName);
+                    statement.setLong(3, claimedAt);
+                    statement.setLong(4, bountyIds.get(i));
+
+                    if (statement.executeUpdate() != 1) {
+                        throw new SQLException(
+                                "No se pudo actualizar la recompensa #"
+                                        + bountyIds.get(i)
+                        );
+                    }
+                }
+
+                insertHistory(
+                        "CLAIMED",
+                        hunterUUID,
+                        hunterName,
+                        targetUUID,
+                        targetNames.get(i),
+                        amounts.get(i),
+                        "Recompensa #" + bountyIds.get(i)
+                                + " reclamada por " + hunterName
+                );
+            }
+
+            String statsSql = """
+                INSERT INTO hunter_stats (
+                    player_uuid,
+                    player_name,
+                    total_claims,
+                    total_earned,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(player_uuid) DO UPDATE SET
+                    player_name = excluded.player_name,
+                    total_claims = hunter_stats.total_claims
+                            + excluded.total_claims,
+                    total_earned = hunter_stats.total_earned
+                            + excluded.total_earned,
+                    updated_at = excluded.updated_at
+                """;
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(statsSql)) {
+
+                statement.setString(1, hunterUUID.toString());
+                statement.setString(2, hunterName);
+                statement.setInt(3, bountyIds.size());
+                statement.setDouble(4, totalEarned);
+                statement.setLong(5, claimedAt);
+
+                statement.executeUpdate();
+            }
+
+            connection.commit();
+
+            return new BountyClaimResult(
+                    bountyIds.size(),
+                    totalEarned
+            );
+
+        } catch (SQLException | RuntimeException exception) {
+            connection.rollback();
+            throw exception;
+
+        } finally {
+            connection.setAutoCommit(previousAutoCommit);
+        }
+    }
+
+    public synchronized List<HunterStats> getTopHunters(
+            int limit
+    ) throws SQLException {
+
+        if (limit <= 0 || limit > 100) {
+            throw new IllegalArgumentException(
+                    "El límite del ranking no es válido."
+            );
+        }
+
+        List<HunterStats> hunters = new ArrayList<>();
+
+        String sql = """
+            SELECT
+                player_uuid,
+                player_name,
+                total_claims,
+                total_earned
+            FROM hunter_stats
+            WHERE total_claims > 0
+            ORDER BY
+                total_claims DESC,
+                total_earned DESC,
+                player_name ASC
+            LIMIT ?
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, limit);
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+
+                    hunters.add(new HunterStats(
+                            UUID.fromString(result.getString("player_uuid")),
+                            result.getString("player_name"),
+                            result.getInt("total_claims"),
+                            result.getDouble("total_earned")
+                    ));
+                }
+            }
+        }
+
+        return hunters;
     }
 
     public synchronized void close() throws SQLException {

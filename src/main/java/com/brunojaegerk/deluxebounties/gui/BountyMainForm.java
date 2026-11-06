@@ -5,6 +5,7 @@ import cn.nukkit.Player;
 import com.brunojaegerk.deluxebounties.Main;
 import com.formconstructor.form.SimpleForm;
 import com.brunojaegerk.deluxebounties.gui.BountyCreateForm;
+import com.brunojaegerk.deluxebounties.gui.BountyTopForm;
 
 public final class BountyMainForm {
 
@@ -44,12 +45,8 @@ public final class BountyMainForm {
 
         form.addButton(
                 "§dTop cazadores\n§7Ranking de jugadores",
-                (target, button) -> {
-                    target.sendMessage(
-                            "§eEl ranking de cazadores "
-                                    + "se implementará próximamente."
-                    );
-                }
+                (target, button) ->
+                        new BountyTopForm(plugin).send(target)
         );
 
         form.setCloseHandler(target -> {

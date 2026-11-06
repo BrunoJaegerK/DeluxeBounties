@@ -5,6 +5,7 @@ import com.brunojaegerk.deluxebounties.database.DatabaseManager;
 import com.brunojaegerk.deluxebounties.economy.EconomyManager;
 import com.brunojaegerk.deluxebounties.manager.BountyService;
 import com.brunojaegerk.deluxebounties.command.BountyCommand;
+import com.brunojaegerk.deluxebounties.listener.BountyListener;
 
 import java.sql.SQLException;
 
@@ -64,6 +65,13 @@ public final class Main extends PluginBase {
         bountyService = new BountyService(this);
 
         getLogger().info("§aBountyService inicializado correctamente.");
+
+        getServer().getPluginManager().registerEvents(
+                new BountyListener(this),
+                this
+        );
+
+        getLogger().info("§aBountyListener registrado correctamente.");
 
         getLogger().info("§aDeluxeBounties habilitado correctamente.");
         getLogger().info(

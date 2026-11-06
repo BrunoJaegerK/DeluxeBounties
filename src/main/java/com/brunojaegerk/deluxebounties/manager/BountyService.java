@@ -3,6 +3,8 @@ package com.brunojaegerk.deluxebounties.manager;
 import com.brunojaegerk.deluxebounties.Main;
 import com.brunojaegerk.deluxebounties.bounty.Bounty;
 import com.brunojaegerk.deluxebounties.database.DatabaseManager;
+import com.brunojaegerk.deluxebounties.bounty.BountyClaimResult;
+import com.brunojaegerk.deluxebounties.bounty.HunterStats;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -321,6 +323,130 @@ public final class BountyService {
         }
 
         return databaseManager.getActiveBountiesByCreator(creatorUUID);
+    }
+
+    public synchronized BountyClaimResult claimBounties(
+            UUID targetUUID,
+            UUID hunterUUID,
+            String hunterName
+    ) throws SQLException {
+
+        if (targetUUID == null || hunterUUID == null
+                || hunterName == null || hunterName.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Los datos del cazador no son válidos."
+            );
+        }
+
+        if (targetUUID.equals(hunterUUID)) {
+            throw new IllegalArgumentException(
+                    "No puedes reclamar una recompensa sobre ti mismo."
+            );
+        }
+
+        if (!plugin.isEconomyAvailable()) {
+            throw new IllegalStateException(
+                    "El sistema económico no está disponible."
+            );
+        }
+
+        List<Bounty> activeBounties =
+                databaseManager.getActiveBountiesForTarget(targetUUID);
+
+        if (activeBounties.isEmpty()) {
+            return new BountyClaimResult(0, 0.0);
+        }
+
+        double totalAmount = 0.0;
+
+        for (Bounty bounty : activeBounties) {
+            totalAmount += bounty.getAmount();
+        }
+
+        if (!Double.isFinite(totalAmount) || totalAmount <= 0) {
+            throw new IllegalStateException(
+                    "El importe total de las recompensas no es válido."
+            );
+        }
+
+        boolean paid = plugin.getEconomyManager().deposit(
+                hunterUUID,
+                totalAmount
+        );
+
+        if (!paid) {
+            throw new IllegalStateException(
+                    "No se pudo entregar el dinero al cazador."
+            );
+        }
+
+        try {
+            BountyClaimResult result =
+                    databaseManager.claimBountiesForTarget(
+                            targetUUID,
+                            hunterUUID,
+                            hunterName
+                    );
+
+            if (!result.hasClaims()) {
+                throw new IllegalStateException(
+                        "Las recompensas ya no están disponibles."
+                );
+            }
+
+            plugin.getLogger().info(
+                    "§a" + hunterName
+                            + " reclamó " + result.getTotalClaims()
+                            + " recompensas por " + result.getTotalEarned()
+                            + "."
+            );
+
+            return result;
+
+        } catch (SQLException | RuntimeException exception) {
+
+            rollbackClaimPayment(
+                    hunterUUID,
+                    hunterName,
+                    totalAmount
+            );
+
+            throw exception;
+        }
+    }
+
+    private void rollbackClaimPayment(
+            UUID hunterUUID,
+            String hunterName,
+            double amount
+    ) {
+
+        try {
+            boolean withdrawn = plugin.getEconomyManager().withdraw(
+                    hunterUUID,
+                    amount
+            );
+
+            if (!withdrawn) {
+                plugin.getLogger().error(
+                        "¡ATENCIÓN! No se pudo revertir el pago de "
+                                + amount + " al cazador " + hunterName
+                                + " (UUID: " + hunterUUID + ")."
+                );
+            }
+
+        } catch (RuntimeException exception) {
+            plugin.getLogger().error(
+                    "Error al revertir el pago de una recompensa.",
+                    exception
+            );
+        }
+    }
+
+    public List<HunterStats> getTopHunters(int limit)
+            throws SQLException {
+
+        return databaseManager.getTopHunters(limit);
     }
 }
 
