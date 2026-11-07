@@ -198,13 +198,13 @@ Desarrollado por **BrunoJaegerK** para el ecosistema de servidores de Minecraft 
 - GitHub: [@BrunoJaegerK](https://github.com/BrunoJaegerK)
 - Proyecto: [DeluxeBounties](https://github.com/BrunoJaegerK/DeluxeBounties)
 
----
-
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia GNU General Public License v3.0.
 
 Consulta el archivo [LICENSE](LICENSE) para más información.
+
+---
 
 <p align="center">
   <b>DeluxeBounties</b> · Recompensa a tus objetivos. Conviértete en el mejor cazador.
