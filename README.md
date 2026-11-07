@@ -193,7 +193,7 @@ DeluxeBounties se encuentra en desarrollo activo. Las funciones y opciones puede
 
 ## 👨‍💻 Autor
 
-Desarrollado por **BrunoJaegerK** para el ecosistema de servidores DeluxeMine.
+Desarrollado por **BrunoJaegerK** para el ecosistema de servidores de Minecraft Bedrock.
 
 - GitHub: [@BrunoJaegerK](https://github.com/BrunoJaegerK)
 - Proyecto: [DeluxeBounties](https://github.com/BrunoJaegerK/DeluxeBounties)
