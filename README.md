@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Software-NukkitPetteriM1Edition-7B2CBF?style=for-the-badge&logo=minecraft&logoColor=white">
   <img src="https://img.shields.io/badge/Java-25-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
   <img src="https://img.shields.io/badge/Build-Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white">
-  <img src="https://img.shields.io/badge/Database-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white">
+  <img src="https://img.shields.io/badge/Database-H2-4479A1?style=for-the-badge">
   <img src="https://img.shields.io/badge/Forms-FormConstructor-6C3FC5?style=for-the-badge">
   <img src="https://img.shields.io/badge/Economy-EconomyAPI-2E8B57?style=for-the-badge">
 </p>
@@ -20,7 +20,7 @@
 
 **DeluxeBounties** es un plugin de recompensas diseñado para servidores que utilizan **NukkitPetteriM1Edition**. Los jugadores pueden invertir dinero para establecer recompensas sobre otros usuarios, consultar objetivos activos y competir por convertirse en los mejores cazadores.
 
-Utiliza **EconomyAPI** para las operaciones económicas, **FormConstructor** para sus interfaces y **SQLite** para almacenar la información.
+Utiliza **EconomyAPI** para las operaciones económicas, **FormConstructor** para sus interfaces y **H2 Database** para almacenar la información de forma persistente.
 
 ## ✨ Características
 
@@ -34,7 +34,8 @@ Utiliza **EconomyAPI** para las operaciones económicas, **FormConstructor** par
 - Consulta de aportaciones propias.
 - Ranking de cazadores desde la interfaz.
 - Historial personal de operaciones.
-- Almacenamiento persistente mediante SQLite.
+- Almacenamiento persistente mediante H2.
+- Base de datos independiente y reubicada para evitar conflictos con otros plugins.
 - Validaciones de importes, saldo y límites de recompensas activas.
 
 ## 🧩 Dependencias
@@ -44,9 +45,11 @@ Utiliza **EconomyAPI** para las operaciones económicas, **FormConstructor** par
 | NukkitPetteriM1Edition | API del servidor | Sí |
 | FormConstructor 3.1.0 | Formularios e interfaces | Sí |
 | EconomyAPI 2.0.7 | Operaciones económicas | Para funciones económicas |
-| SQLite JDBC | Base de datos | Incluida mediante Maven |
+| H2 Database 2.1.214 | Almacenamiento de datos | Incluida en el plugin |
 
 **Importante:** EconomyAPI está declarada como dependencia opcional. Sin ella, el plugin puede iniciar, pero las operaciones económicas estarán desactivadas.
+
+H2 se incluye directamente dentro del JAR mediante Maven Shade, por lo que no necesitas instalarlo por separado en el servidor.
 
 ## 📥 Instalación
 
@@ -57,7 +60,7 @@ Utiliza **EconomyAPI** para las operaciones económicas, **FormConstructor** par
 5. Copia el JAR en la carpeta `plugins/`.
 6. Reinicia el servidor.
 
-Los archivos de configuración y lenguaje se generan automáticamente durante el primer inicio.
+Los archivos de configuración, idioma y base de datos se generan automáticamente durante el primer inicio.
 
 ## 🎮 Comandos
 
@@ -88,8 +91,8 @@ settings:
   language: "es_ES"
 
 database:
-  type: SQLITE
-  file: "bounties.db"
+  type: H2
+  file: "bounties"
 
 economy:
   provider: EconomyAPI
@@ -139,17 +142,29 @@ leaderboard:
 
 > Algunas opciones están preparadas en la configuración para su uso y ampliación. Su presencia en el archivo no implica que todas tengan ya un comportamiento configurable completo.
 
-## 🗄️ Almacenamiento
+## 🗄️ Almacenamiento H2
 
-DeluxeBounties utiliza SQLite. La base de datos se crea automáticamente.
+DeluxeBounties utiliza **H2 Database 2.1.214** como sistema de almacenamiento.
 
-```yaml
-database:
-  type: SQLITE
-  file: "bounties.db"
+La base de datos se crea automáticamente en:
+
+```text
+plugins/
+└── DeluxeBounties/
+    ├── config.yml
+    ├── lang.yml
+    └── bounties.mv.db
 ```
 
-Se recomienda realizar copias de seguridad periódicas del archivo de base de datos antes de actualizar el plugin.
+### Ventajas
+
+- Base de datos integrada en el plugin.
+- No requiere instalar un servidor de base de datos adicional.
+- Almacenamiento persistente de recompensas, historial y estadísticas.
+- H2 se incluye dentro del JAR mediante Maven Shade.
+- Paquete H2 reubicado para reducir conflictos con otros plugins.
+
+**Copias de seguridad:** se recomienda realizar copias periódicas del archivo `bounties.mv.db` con el servidor detenido.
 
 ## 🛠️ Compilación
 
@@ -185,7 +200,7 @@ El archivo compilado se genera en:
 target/DeluxeBounties-1.0.0.jar
 ```
 
-Maven utiliza Shade para incluir SQLite JDBC en el JAR final.
+Maven utiliza **Maven Shade 3.6.2** para incluir H2 y reubicar sus paquetes dentro del JAR final.
 
 ## 🗺️ Estado del proyecto
 
