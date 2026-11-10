@@ -1,3 +1,4 @@
+
 package com.brunojaegerk.deluxebounties;
 
 import cn.nukkit.plugin.PluginBase;
@@ -28,12 +29,12 @@ public final class Main extends PluginBase {
         getLogger().info("§7  Advanced Bounty System");
         getLogger().info("§d================================");
 
-        // Inicializar SQLite
+        // Inicializar H2
         try {
             databaseManager = new DatabaseManager(this);
             databaseManager.initialize();
 
-            getLogger().info("§aBase de datos SQLite inicializada.");
+            getLogger().info("§aBase de datos H2 inicializada.");
 
         } catch (SQLException exception) {
             getLogger().error(
@@ -131,5 +132,6 @@ public final class Main extends PluginBase {
         return bountyService;
     }
 }
+
 
 

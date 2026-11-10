@@ -3,8 +3,8 @@ settings:
   language: "es_ES"
 
 database:
-  type: SQLITE
-  file: "bounties.db"
+  type: H2
+  file: "bounties"
 
 economy:
   provider: EconomyAPI
