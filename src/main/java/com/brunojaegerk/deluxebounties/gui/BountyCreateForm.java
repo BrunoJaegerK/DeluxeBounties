@@ -28,7 +28,9 @@ public final class BountyCreateForm {
         form.addElement(
                 "information",
                 new Header("§7Coloca una recompensa sobre otro jugador.\n"
-                        + "§8El dinero se descontará de tu saldo.")
+                        + "§8Se cobrará en " + plugin.getEconomyManager().getCurrencySymbol()
+                        + (plugin.getEconomyManager().getProvider().equalsIgnoreCase("EconomyExpandNK")
+                        ? plugin.getEconomyManager().getCurrencyId() : "dinero") + ".")
         );
 
         // Jugador objetivo
@@ -136,7 +138,7 @@ public final class BountyCreateForm {
             );
 
             player.sendMessage(
-                    "§7Cantidad: §6" + amount
+                    "§7Cantidad: §6" + plugin.getEconomyManager().formatAmount(bounty.getAmount())
             );
 
             player.sendMessage(
@@ -150,7 +152,7 @@ public final class BountyCreateForm {
             );
 
             target.sendMessage(
-                    "§7Cantidad añadida: §6" + amount
+                    "§7Cantidad añadida: §6" + plugin.getEconomyManager().formatAmount(bounty.getAmount())
             );
 
             plugin.getLogger().info(
