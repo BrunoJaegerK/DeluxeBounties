@@ -66,8 +66,7 @@ public final class BountyListener implements Listener {
             );
 
             hunter.sendMessage(
-                    "§7Dinero obtenido: §a+"
-                            + result.getTotalClaims() + " recompensa(s) procesada(s) en su moneda original"
+                    "§7Cada recompensa se ha pagado en la moneda seleccionada por su creador."
             );
 
             victim.sendMessage(
