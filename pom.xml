@@ -3,6 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.brunojaegerk</groupId>
@@ -19,6 +20,8 @@
     </properties>
 
     <dependencies>
+
+        <!-- NukkitPetteriM1Edition API -->
         <dependency>
             <groupId>local.nukkit</groupId>
             <artifactId>nukkit-petterim1edition</artifactId>
@@ -26,6 +29,8 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/libs/server.jar</systemPath>
         </dependency>
+
+        <!-- FormConstructor 3.1.0 -->
         <dependency>
             <groupId>local.formconstructor</groupId>
             <artifactId>formconstructor</artifactId>
@@ -33,11 +38,15 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/libs/FormConstructor-3.1.0.jar</systemPath>
         </dependency>
+
+        <!-- H2 Database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.1.214</version>
         </dependency>
+
+        <!-- EconomyAPI 2.0.7 -->
         <dependency>
             <groupId>local</groupId>
             <artifactId>economyapi</artifactId>
@@ -45,28 +54,43 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/libs/economyapi-2.0.7.jar</systemPath>
         </dependency>
+
     </dependencies>
 
     <build>
         <finalName>DeluxeBounties-${project.version}</finalName>
+
         <plugins>
+
+            <!-- Java 25 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.1</version>
-                <configuration><release>25</release></configuration>
+                <configuration>
+                    <release>25</release>
+                </configuration>
             </plugin>
+
+            <!-- H2 Shading -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.2</version>
+
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+
                             <minimizeJar>false</minimizeJar>
+
+                            <!-- Exclude server-provided libraries -->
                             <artifactSet>
                                 <excludes>
                                     <exclude>local.nukkit:nukkit-petterim1edition</exclude>
@@ -74,15 +98,21 @@
                                     <exclude>local:economyapi</exclude>
                                 </excludes>
                             </artifactSet>
+
+                            <!-- Relocate H2 -->
                             <relocations>
                                 <relocation>
                                     <pattern>org.h2</pattern>
                                     <shadedPattern>com.brunojaegerk.deluxebounties.libs.h2</shadedPattern>
                                 </relocation>
                             </relocations>
+
+                            <!-- Preserve JDBC services -->
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
+
+                            <!-- Remove signature files -->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -93,10 +123,14 @@
                                     </excludes>
                                 </filter>
                             </filters>
+
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
+
 </project>
+
