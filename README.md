@@ -20,7 +20,7 @@
 
 **DeluxeBounties** es un plugin de recompensas diseñado para servidores que utilizan **NukkitPetteriM1Edition**. Los jugadores pueden invertir dinero para establecer recompensas sobre otros usuarios, consultar objetivos activos y competir por convertirse en los mejores cazadores.
 
-Utiliza **EconomyAPI** o **EconomyExpandNK** como proveedor económico configurable, **FormConstructor** para sus interfaces y **H2 Database** para almacenar la información de forma persistente.
+Utiliza **EconomyAPI** como economía principal y admite opcionalmente las monedas de **EconomyExpandNK**, seleccionables individualmente al crear cada recompensa. Usa **FormConstructor** para sus interfaces y **H2 Database** para almacenar la información de forma persistente.
 
 ## ✨ Características
 
@@ -44,11 +44,11 @@ Utiliza **EconomyAPI** o **EconomyExpandNK** como proveedor económico configura
 |---|---|---|
 | NukkitPetteriM1Edition | API del servidor | Sí |
 | FormConstructor 3.1.0 | Formularios e interfaces | Sí |
-| EconomyAPI 2.0.7 | Economía principal | Si se selecciona EconomyAPI |
-| EconomyExpandNK | Monedas secundarias | Si se selecciona EconomyExpandNK |
+| EconomyAPI 2.0.7 | Economía principal y opción predeterminada | Sí |
+| EconomyExpandNK | Monedas adicionales seleccionables | No, opcional |
 | H2 Database 2.1.214 | Almacenamiento de datos | Incluida en el plugin |
 
-**Importante:** EconomyAPI y EconomyExpandNK son dependencias opcionales. El proveedor elegido en `config.yml` debe estar instalado y habilitado; si no está disponible, el plugin inicia con las operaciones económicas desactivadas.
+**Importante:** EconomyAPI es la economía principal. EconomyExpandNK es opcional: cuando está instalado, sus monedas habilitadas aparecen en el desplegable de creación; si no está instalado, DeluxeBounties funciona con EconomyAPI.
 
 H2 se incluye directamente dentro del JAR mediante Maven Shade, por lo que no necesitas instalarlo por separado en el servidor.
 
@@ -57,7 +57,7 @@ H2 se incluye directamente dentro del JAR mediante Maven Shade, por lo que no ne
 1. Descarga o compila `DeluxeBounties-1.0.0.jar`.
 2. Comprueba que utilizas NukkitPetteriM1Edition.
 3. Instala FormConstructor.
-4. Instala el proveedor económico que hayas seleccionado en `config.yml`: EconomyAPI o EconomyExpandNK.
+4. Instala EconomyAPI. EconomyExpandNK es opcional y solo se necesita para habilitar monedas adicionales.
 5. Copia el JAR en la carpeta `plugins/`.
 6. Reinicia el servidor.
 
@@ -96,11 +96,9 @@ database:
   file: "bounties"
 
 economy:
-  # Proveedores: EconomyAPI o EconomyExpandNK
+  # Proveedor predeterminado para el comando clásico /bounty.
+  # La interfaz permite seleccionar la moneda para cada recompensa.
   provider: EconomyAPI
-
-  # Solo se utiliza con EconomyExpandNK
-  currency-id: crystals
 
   # Símbolo utilizado con EconomyAPI
   currency-symbol: "$"
@@ -135,27 +133,22 @@ leaderboard:
 
 ### Economía y selección de moneda
 
-DeluxeBounties conserva **EconomyAPI** como proveedor predeterminado. Para utilizar una moneda secundaria, instala EconomyExpandNK y cambia la configuración:
+Al crear una recompensa desde la interfaz, el jugador selecciona la moneda que desea utilizar:
 
-```yaml
-economy:
-  provider: EconomyExpandNK
-  currency-id: crystals
-  currency-symbol: "$"
-```
+- **EconomyAPI**: saldo principal.
+- **EconomyExpandNK**: todas las monedas habilitadas en `plugins/EconomyExpandNK/currencies.yml`, detectadas automáticamente.
 
-- `provider: EconomyAPI`: utiliza el saldo principal de EconomyAPI, sin cambios respecto a versiones anteriores.
-- `provider: EconomyExpandNK`: utiliza el proveedor de monedas secundarias.
-- `currency-id`: ID exacto de una moneda habilitada en `plugins/EconomyExpandNK/currencies.yml`, por ejemplo `crystals` o `tokens`.
-- `currency-symbol`: símbolo mostrado cuando se utiliza EconomyAPI. Con EconomyExpandNK se toma el símbolo configurado para la moneda seleccionada.
+EconomyAPI permanece como opción predeterminada. EconomyExpandNK es opcional; si no está instalado, el desplegable solo ofrece EconomyAPI. No se necesita configurar una moneda secundaria global.
 
-El proveedor seleccionado se utiliza para cobrar las nuevas recompensas, pagar al cazador, reembolsar cancelaciones y revertir operaciones fallidas. Los importes respetan la precisión decimal de la moneda secundaria seleccionada.
+Cada recompensa guarda su proveedor y el ID de la moneda elegida. Las recompensas de distintas monedas pueden coexistir sobre el mismo objetivo. El cobro al crearla, el pago al cazador, las cancelaciones y los reembolsos utilizan siempre esa moneda original. Los importes se ajustan a los decimales admitidos por cada moneda.
 
-**Importante:** mantén el mismo proveedor y el mismo `currency-id` mientras existan recompensas activas o registros históricos que quieras interpretar correctamente. El esquema actual no guarda un ID de moneda individual por recompensa; cambiar el proveedor puede hacer que recompensas pendientes se paguen en otra moneda y que los importes históricos se muestren con el símbolo nuevo.
+Las recompensas guardadas antes de esta actualización se migran automáticamente y se consideran de EconomyAPI. No elimines ni deshabilites una moneda de EconomyExpandNK mientras existan recompensas activas que dependan de ella.
+
+El comando clásico `/bounty <jugador> <cantidad>` se mantiene y utiliza el proveedor predeterminado configurado en `economy.provider`; para elegir cualquier moneda, utiliza la interfaz.
 
 #### Dependencia de ejecución
 
-EconomyExpandNK es una dependencia opcional en tiempo de ejecución. No necesitas añadir su JAR a `libs/` ni incluir sus clases dentro de DeluxeBounties. Instala el plugin por separado y DeluxeBounties accederá a su API pública cuando se seleccione como proveedor.
+No necesitas añadir EconomyExpandNK a las bibliotecas de compilación ni empaquetar sus clases en DeluxeBounties. Instala el plugin por separado; DeluxeBounties detecta su API pública al iniciar.
 
 ### Opciones principales
 
