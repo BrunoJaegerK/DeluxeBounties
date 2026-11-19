@@ -409,7 +409,6 @@ public final class BountyService {
                     targetUUID, hunterUUID, hunterName);
 
             if (!result.hasClaims()) {
-                rollbackClaimPayments(hunterUUID, hunterName, paid);
                 throw new IllegalStateException("Las recompensas ya no están disponibles.");
             }
 
