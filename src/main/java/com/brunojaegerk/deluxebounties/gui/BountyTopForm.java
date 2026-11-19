@@ -65,9 +65,7 @@ public final class BountyTopForm {
                             .append(hunter.getTotalClaims())
                             .append("\n");
 
-                    content.append("  §7Dinero obtenido: §a")
-                            .append(plugin.formatAmount(hunter.getTotalEarned()))
-                            .append("\n\n");
+                    content.append("\n");
                 }
             }
 
