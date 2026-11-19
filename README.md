@@ -151,7 +151,7 @@ economy:
 
 El proveedor seleccionado se utiliza para cobrar las nuevas recompensas, pagar al cazador, reembolsar cancelaciones y revertir operaciones fallidas. Los importes respetan la precisión decimal de la moneda secundaria seleccionada.
 
-**Importante:** mantén el mismo proveedor y el mismo `currency-id` mientras existan recompensas activas. Las recompensas guardadas actualmente no almacenan un ID de moneda individual; cambiar el proveedor con recompensas activas podría provocar que su cobro o pago se realice en la nueva moneda.
+**Importante:** mantén el mismo proveedor y el mismo `currency-id` mientras existan recompensas activas o registros históricos que quieras interpretar correctamente. El esquema actual no guarda un ID de moneda individual por recompensa; cambiar el proveedor puede hacer que recompensas pendientes se paguen en otra moneda y que los importes históricos se muestren con el símbolo nuevo.
 
 #### Dependencia de ejecución
 
