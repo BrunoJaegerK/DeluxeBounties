@@ -27,6 +27,8 @@ public final class BountyService {
             UUID creatorUUID,
             String creatorName,
             double amount,
+            String currencyProvider,
+            String currencyId,
             boolean anonymous
     ) throws SQLException {
 
@@ -107,18 +109,16 @@ public final class BountyService {
         }
 
         // Comprobar disponibilidad de EconomyAPI
-        if (!plugin.isEconomyAvailable()) {
-            throw new IllegalStateException(
-                    "El sistema económico no está disponible."
-            );
+        if (!plugin.getEconomyManager().isAvailable(currencyProvider, currencyId)) {
+            throw new IllegalStateException("La moneda seleccionada no está disponible.");
         }
 
         // Aplicar la precisión admitida por la moneda seleccionada.
-        amount = plugin.getEconomyManager().normalizeAmount(amount);
+        amount = plugin.getEconomyManager().normalizeAmount(amount, currencyProvider, currencyId);
 
         // Comprobar saldo
         if (!plugin.getEconomyManager().hasBalance(
-                creatorUUID, amount)) {
+                creatorUUID, amount, currencyProvider, currencyId)) {
 
             throw new IllegalStateException(
                     "No tienes suficiente dinero para esta recompensa."
@@ -127,7 +127,7 @@ public final class BountyService {
 
         // Retirar dinero antes de registrar la recompensa
         boolean withdrawn = plugin.getEconomyManager().withdraw(
-                creatorUUID, amount
+                creatorUUID, amount, currencyProvider, currencyId
         );
 
         if (!withdrawn) {
@@ -144,6 +144,8 @@ public final class BountyService {
                     creatorUUID,
                     creatorName,
                     amount,
+                    currencyProvider,
+                    currencyId,
                     anonymous
             );
 
@@ -162,7 +164,7 @@ public final class BountyService {
 
             try {
                 refunded = plugin.getEconomyManager().deposit(
-                        creatorUUID, amount
+                        creatorUUID, amount, currencyProvider, currencyId
                 );
             } catch (RuntimeException refundException) {
                 plugin.getLogger().error(
@@ -223,11 +225,15 @@ public final class BountyService {
         }
 
         double refundAmount = bounty.getAmount();
+        String refundProvider = bounty.getCurrencyProvider();
+        String refundCurrency = bounty.getCurrencyId();
 
         // Devolver el 100 % de la aportación
         boolean refunded = plugin.getEconomyManager().deposit(
                 creatorUUID,
-                refundAmount
+                refundAmount,
+                refundProvider,
+                refundCurrency
         );
 
         if (!refunded) {
@@ -245,7 +251,7 @@ public final class BountyService {
             );
 
             if (!cancelled) {
-                rollbackRefund(creatorUUID, creatorName, refundAmount);
+                rollbackRefund(creatorUUID, creatorName, refundAmount, refundProvider, refundCurrency);
 
                 throw new IllegalStateException(
                         "No se pudo cancelar la recompensa. "
@@ -271,13 +277,17 @@ public final class BountyService {
     private void rollbackRefund(
             UUID creatorUUID,
             String creatorName,
-            double amount
+            double amount,
+            String provider,
+            String currencyId
     ) {
 
         try {
             boolean withdrawn = plugin.getEconomyManager().withdraw(
                     creatorUUID,
-                    amount
+                    amount,
+                    provider,
+                    currencyId
             );
 
             if (!withdrawn) {
@@ -348,12 +358,6 @@ public final class BountyService {
             );
         }
 
-        if (!plugin.isEconomyAvailable()) {
-            throw new IllegalStateException(
-                    "El sistema económico no está disponible."
-            );
-        }
-
         List<Bounty> activeBounties =
                 databaseManager.getActiveBountiesForTarget(targetUUID);
 
@@ -361,89 +365,71 @@ public final class BountyService {
             return new BountyClaimResult(0, 0.0);
         }
 
-        double totalAmount = 0.0;
-
+        java.util.Map<String, Double> payments = new java.util.LinkedHashMap<>();
         for (Bounty bounty : activeBounties) {
-            totalAmount += bounty.getAmount();
+            String key = bounty.getCurrencyProvider() + "\u0000" + bounty.getCurrencyId();
+            payments.merge(key, bounty.getAmount(), Double::sum);
         }
 
-        if (!Double.isFinite(totalAmount) || totalAmount <= 0) {
-            throw new IllegalStateException(
-                    "El importe total de las recompensas no es válido."
-            );
-        }
-
-        boolean paid = plugin.getEconomyManager().deposit(
-                hunterUUID,
-                totalAmount
-        );
-
-        if (!paid) {
-            throw new IllegalStateException(
-                    "No se pudo entregar el dinero al cazador."
-            );
+        java.util.Map<String, Double> paid = new java.util.LinkedHashMap<>();
+        for (java.util.Map.Entry<String, Double> entry : payments.entrySet()) {
+            String[] currency = entry.getKey().split("\u0000", -1);
+            String provider = currency[0];
+            String currencyId = currency.length > 1 ? currency[1] : "";
+            if (!plugin.getEconomyManager().isAvailable(provider, currencyId)) {
+                rollbackClaimPayments(hunterUUID, hunterName, paid);
+                throw new IllegalStateException("No está disponible la moneda "
+                        + provider + (currencyId.isEmpty() ? "" : "/" + currencyId)
+                        + " de una recompensa activa. No se ha reclamado ninguna.");
+            }
+            if (!plugin.getEconomyManager().deposit(
+                    hunterUUID, entry.getValue(), provider, currencyId)) {
+                rollbackClaimPayments(hunterUUID, hunterName, paid);
+                throw new IllegalStateException("No se pudo entregar una de las monedas "
+                        + "de las recompensas. No se ha reclamado ninguna.");
+            }
+            paid.put(entry.getKey(), entry.getValue());
         }
 
         try {
-            BountyClaimResult result =
-                    databaseManager.claimBountiesForTarget(
-                            targetUUID,
-                            hunterUUID,
-                            hunterName
-                    );
+            BountyClaimResult result = databaseManager.claimBountiesForTarget(
+                    targetUUID, hunterUUID, hunterName);
 
             if (!result.hasClaims()) {
-                throw new IllegalStateException(
-                        "Las recompensas ya no están disponibles."
-                );
+                rollbackClaimPayments(hunterUUID, hunterName, paid);
+                throw new IllegalStateException("Las recompensas ya no están disponibles.");
             }
 
-            plugin.getLogger().info(
-                    "§a" + hunterName
-                            + " reclamó " + result.getTotalClaims()
-                            + " recompensas por " + result.getTotalEarned()
-                            + "."
-            );
-
+            plugin.getLogger().info("§a" + hunterName + " reclamó "
+                    + result.getTotalClaims() + " recompensas en "
+                    + paid.size() + " tipo(s) de moneda.");
             return result;
 
         } catch (SQLException | RuntimeException exception) {
-
-            rollbackClaimPayment(
-                    hunterUUID,
-                    hunterName,
-                    totalAmount
-            );
-
+            rollbackClaimPayments(hunterUUID, hunterName, paid);
             throw exception;
         }
     }
 
-    private void rollbackClaimPayment(
+    private void rollbackClaimPayments(
             UUID hunterUUID,
             String hunterName,
-            double amount
+            java.util.Map<String, Double> paid
     ) {
-
-        try {
-            boolean withdrawn = plugin.getEconomyManager().withdraw(
-                    hunterUUID,
-                    amount
-            );
-
-            if (!withdrawn) {
-                plugin.getLogger().error(
-                        "¡ATENCIÓN! No se pudo revertir el pago de "
-                                + amount + " al cazador " + hunterName
-                                + " (UUID: " + hunterUUID + ")."
-                );
+        for (java.util.Map.Entry<String, Double> entry : paid.entrySet()) {
+            String[] currency = entry.getKey().split("\u0000", -1);
+            String provider = currency[0];
+            String currencyId = currency.length > 1 ? currency[1] : "";
+            try {
+                if (!plugin.getEconomyManager().withdraw(
+                        hunterUUID, entry.getValue(), provider, currencyId)) {
+                    plugin.getLogger().error("¡ATENCIÓN! No se pudo revertir "
+                            + entry.getValue() + " (" + provider + "/" + currencyId
+                            + ") al cazador " + hunterName + ".");
+                }
+            } catch (RuntimeException exception) {
+                plugin.getLogger().error("Error al revertir el pago de una moneda.", exception);
             }
-
-        } catch (RuntimeException exception) {
-            plugin.getLogger().error(
-                    "Error al revertir el pago de una recompensa.",
-                    exception
-            );
         }
     }
 
