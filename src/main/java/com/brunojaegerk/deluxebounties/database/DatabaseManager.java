@@ -84,6 +84,8 @@ public final class DatabaseManager {
                     creator_uuid VARCHAR(36) NOT NULL,
                     creator_name VARCHAR(255) NOT NULL,
                     amount DOUBLE PRECISION NOT NULL CHECK(amount > 0),
+                    currency_provider VARCHAR(64) NOT NULL DEFAULT 'EconomyAPI',
+                    currency_id VARCHAR(128) NOT NULL DEFAULT '',
                     anonymous INTEGER NOT NULL DEFAULT 0,
                     status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
                     created_at BIGINT NOT NULL,
@@ -120,6 +122,8 @@ public final class DatabaseManager {
         try (Statement statement = connection.createStatement()) {
 
             statement.execute(bountiesTable);
+            statement.execute("ALTER TABLE bounties ADD COLUMN IF NOT EXISTS currency_provider VARCHAR(64) NOT NULL DEFAULT 'EconomyAPI'");
+            statement.execute("ALTER TABLE bounties ADD COLUMN IF NOT EXISTS currency_id VARCHAR(128) NOT NULL DEFAULT ''");
             statement.execute(historyTable);
             statement.execute(hunterStatsTable);
 
@@ -151,6 +155,8 @@ public final class DatabaseManager {
             UUID creatorUUID,
             String creatorName,
             double amount,
+            String currencyProvider,
+            String currencyId,
             boolean anonymous
     ) throws SQLException {
 
@@ -178,10 +184,12 @@ public final class DatabaseManager {
                         creator_uuid,
                         creator_name,
                         amount,
+                        currency_provider,
+                        currency_id,
                         anonymous,
                         status,
                         created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
                     """;
 
             try (PreparedStatement statement =
@@ -195,8 +203,10 @@ public final class DatabaseManager {
                 statement.setString(3, creatorUUID.toString());
                 statement.setString(4, creatorName);
                 statement.setDouble(5, amount);
-                statement.setInt(6, anonymous ? 1 : 0);
-                statement.setLong(7, createdAt);
+                statement.setString(6, currencyProvider);
+                statement.setString(7, currencyId == null ? "" : currencyId);
+                statement.setInt(8, anonymous ? 1 : 0);
+                statement.setLong(9, createdAt);
 
                 statement.executeUpdate();
 
@@ -228,6 +238,8 @@ public final class DatabaseManager {
                     creatorUUID,
                     creatorName,
                     amount,
+                    currencyProvider,
+                    currencyId,
                     anonymous,
                     BountyStatus.ACTIVE,
                     createdAt
@@ -389,7 +401,7 @@ public final class DatabaseManager {
             connection.setAutoCommit(false);
 
             String selectSql = """
-                    SELECT target_uuid, target_name, creator_name, amount
+                    SELECT target_uuid, target_name, creator_name, amount, currency_provider, currency_id
                     FROM bounties
                     WHERE id = ?
                     AND creator_uuid = ?
@@ -400,6 +412,8 @@ public final class DatabaseManager {
             String targetName;
             String creatorName;
             double amount;
+            String currencyProvider;
+            String currencyId;
 
             try (PreparedStatement statement =
                          connection.prepareStatement(selectSql)) {
@@ -417,6 +431,8 @@ public final class DatabaseManager {
                     targetName = result.getString("target_name");
                     creatorName = result.getString("creator_name");
                     amount = result.getDouble("amount");
+                    currencyProvider = result.getString("currency_provider");
+                    currencyId = result.getString("currency_id");
                 }
             }
 
@@ -508,6 +524,8 @@ public final class DatabaseManager {
                 UUID.fromString(result.getString("creator_uuid")),
                 result.getString("creator_name"),
                 result.getDouble("amount"),
+                result.getString("currency_provider"),
+                result.getString("currency_id"),
                 result.getInt("anonymous") == 1,
                 BountyStatus.valueOf(result.getString("status")),
                 result.getLong("created_at")
@@ -539,7 +557,7 @@ public final class DatabaseManager {
             connection.setAutoCommit(false);
 
             String selectSql = """
-                    SELECT id, target_name, amount
+                    SELECT id, target_name, amount, currency_provider, currency_id
                     FROM bounties
                     WHERE target_uuid = ?
                     AND status = 'ACTIVE'
@@ -549,6 +567,8 @@ public final class DatabaseManager {
             List<Long> bountyIds = new ArrayList<>();
             List<String> targetNames = new ArrayList<>();
             List<Double> amounts = new ArrayList<>();
+            List<String> currencyProviders = new ArrayList<>();
+            List<String> currencyIds = new ArrayList<>();
 
             double totalEarned = 0.0;
 
@@ -570,6 +590,8 @@ public final class DatabaseManager {
                         bountyIds.add(result.getLong("id"));
                         targetNames.add(result.getString("target_name"));
                         amounts.add(amount);
+                        currencyProviders.add(result.getString("currency_provider"));
+                        currencyIds.add(result.getString("currency_id"));
 
                         totalEarned += amount;
                     }
