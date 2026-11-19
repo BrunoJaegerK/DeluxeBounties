@@ -104,6 +104,8 @@ public final class DatabaseManager {
                     target_uuid VARCHAR(36),
                     target_name VARCHAR(255),
                     amount DOUBLE PRECISION NOT NULL,
+                    currency_provider VARCHAR(64) NOT NULL DEFAULT 'EconomyAPI',
+                    currency_id VARCHAR(128) NOT NULL DEFAULT '',
                     created_at BIGINT NOT NULL,
                     details VARCHAR(2000)
                 )
@@ -125,6 +127,8 @@ public final class DatabaseManager {
             statement.execute("ALTER TABLE bounties ADD COLUMN IF NOT EXISTS currency_provider VARCHAR(64) NOT NULL DEFAULT 'EconomyAPI'");
             statement.execute("ALTER TABLE bounties ADD COLUMN IF NOT EXISTS currency_id VARCHAR(128) NOT NULL DEFAULT ''");
             statement.execute(historyTable);
+            statement.execute("ALTER TABLE bounty_history ADD COLUMN IF NOT EXISTS currency_provider VARCHAR(64) NOT NULL DEFAULT 'EconomyAPI'");
+            statement.execute("ALTER TABLE bounty_history ADD COLUMN IF NOT EXISTS currency_id VARCHAR(128) NOT NULL DEFAULT ''");
             statement.execute(hunterStatsTable);
 
             statement.execute("""
@@ -226,7 +230,9 @@ public final class DatabaseManager {
                     targetUUID,
                     targetName,
                     amount,
-                    "Recompensa creada"
+                    "Recompensa creada",
+                    currencyProvider,
+                    currencyId
             );
 
             connection.commit();
@@ -463,7 +469,9 @@ public final class DatabaseManager {
                     UUID.fromString(targetUUID),
                     targetName,
                     amount,
-                    "Aportación cancelada"
+                    "Aportación cancelada",
+                    currencyProvider,
+                    currencyId
             );
 
             connection.commit();
@@ -477,40 +485,33 @@ public final class DatabaseManager {
         }
     }
 
-    private void insertHistory(
-            String eventType,
-            UUID actorUUID,
-            String actorName,
-            UUID targetUUID,
-            String targetName,
-            double amount,
-            String details
-    ) throws SQLException {
+    private void insertHistory(String eventType, UUID actorUUID, String actorName,
+            UUID targetUUID, String targetName, double amount, String details)
+            throws SQLException {
+        insertHistory(eventType, actorUUID, actorName, targetUUID, targetName,
+                amount, details, "EconomyAPI", "");
+    }
 
+    private void insertHistory(String eventType, UUID actorUUID, String actorName,
+            UUID targetUUID, String targetName, double amount, String details,
+            String currencyProvider, String currencyId) throws SQLException {
         String sql = """
                 INSERT INTO bounty_history (
-                    event_type,
-                    actor_uuid,
-                    actor_name,
-                    target_uuid,
-                    target_name,
-                    amount,
-                    created_at,
-                    details
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    event_type, actor_uuid, actor_name, target_uuid, target_name,
+                    amount, currency_provider, currency_id, created_at, details
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
-
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-
             statement.setString(1, eventType);
             statement.setString(2, actorUUID.toString());
             statement.setString(3, actorName);
             statement.setString(4, targetUUID.toString());
             statement.setString(5, targetName);
             statement.setDouble(6, amount);
-            statement.setLong(7, System.currentTimeMillis());
-            statement.setString(8, details);
-
+            statement.setString(7, currencyProvider == null ? "EconomyAPI" : currencyProvider);
+            statement.setString(8, currencyId == null ? "" : currencyId);
+            statement.setLong(9, System.currentTimeMillis());
+            statement.setString(10, details);
             statement.executeUpdate();
         }
     }
@@ -647,7 +648,9 @@ public final class DatabaseManager {
                         targetNames.get(i),
                         amounts.get(i),
                         "Recompensa #" + bountyIds.get(i)
-                                + " reclamada por " + hunterName
+                                + " reclamada por " + hunterName,
+                        currencyProviders.get(i),
+                        currencyIds.get(i)
                 );
             }
 
@@ -788,6 +791,8 @@ public final class DatabaseManager {
                     target_uuid,
                     target_name,
                     amount,
+                    currency_provider,
+                    currency_id,
                     created_at,
                     details
                 FROM bounty_history
@@ -817,6 +822,8 @@ public final class DatabaseManager {
                             targetUUID == null ? null : UUID.fromString(targetUUID),
                             result.getString("target_name"),
                             result.getDouble("amount"),
+                            result.getString("currency_provider"),
+                            result.getString("currency_id"),
                             result.getLong("created_at"),
                             result.getString("details")
                     ));
