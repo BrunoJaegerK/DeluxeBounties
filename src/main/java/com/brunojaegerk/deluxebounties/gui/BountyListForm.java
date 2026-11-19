@@ -86,7 +86,7 @@ public final class BountyListForm {
                         : "§f" + bounty.getCreatorName();
 
                 String amount = plugin.getEconomyManager()
-                        .formatAmount(bounty.getAmount());
+                        .formatAmount(bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId());
 
                 String buttonText =
                         "§e" + bounty.getTargetName()
@@ -134,7 +134,7 @@ public final class BountyListForm {
                 : "§f" + bounty.getCreatorName();
 
         String amount = plugin.getEconomyManager()
-                .formatAmount(bounty.getAmount());
+                .formatAmount(bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId());
 
         player.sendMessage("§5§m-------------------------");
         player.sendMessage("§d§lDETALLES DE RECOMPENSA");
