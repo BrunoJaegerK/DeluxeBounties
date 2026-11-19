@@ -378,13 +378,13 @@ public final class BountyService {
 
         java.util.Map<String, Double> payments = new java.util.LinkedHashMap<>();
         for (Bounty bounty : activeBounties) {
-            String key = bounty.getCurrencyProvider() + "\u0000" + bounty.getCurrencyId();
+            String key = bounty.getCurrencyProvider() + "::" + bounty.getCurrencyId();
             payments.merge(key, bounty.getAmount(), Double::sum);
         }
 
         java.util.Map<String, Double> paid = new java.util.LinkedHashMap<>();
         for (java.util.Map.Entry<String, Double> entry : payments.entrySet()) {
-            String[] currency = entry.getKey().split("\u0000", -1);
+            String[] currency = entry.getKey().split("::", -1);
             String provider = currency[0];
             String currencyId = currency.length > 1 ? currency[1] : "";
             if (!plugin.getEconomyManager().isAvailable(provider, currencyId)) {
@@ -427,7 +427,7 @@ public final class BountyService {
             java.util.Map<String, Double> paid
     ) {
         for (java.util.Map.Entry<String, Double> entry : paid.entrySet()) {
-            String[] currency = entry.getKey().split("\u0000", -1);
+            String[] currency = entry.getKey().split("::", -1);
             String provider = currency[0];
             String currencyId = currency.length > 1 ? currency[1] : "";
             try {
