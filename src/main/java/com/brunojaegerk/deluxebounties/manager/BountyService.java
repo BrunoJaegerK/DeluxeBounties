@@ -264,8 +264,6 @@ public final class BountyService {
             );
 
             if (!cancelled) {
-                rollbackRefund(creatorUUID, creatorName, refundAmount, refundProvider, refundCurrency);
-
                 throw new IllegalStateException(
                         "No se pudo cancelar la recompensa. "
                                 + "Se intentó revertir el reembolso."
@@ -282,7 +280,7 @@ public final class BountyService {
 
         } catch (SQLException | RuntimeException exception) {
 
-            rollbackRefund(creatorUUID, creatorName, refundAmount);
+            rollbackRefund(creatorUUID, creatorName, refundAmount, refundProvider, refundCurrency);
             throw exception;
         }
     }
