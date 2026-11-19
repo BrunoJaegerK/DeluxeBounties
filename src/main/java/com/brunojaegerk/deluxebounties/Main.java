@@ -94,6 +94,23 @@ public final class Main extends PluginBase {
         return economyManager != null;
     }
 
+    public String formatAmount(double amount) {
+        if (economyManager != null) {
+            return economyManager.formatAmount(amount);
+        }
+        String symbol = getConfig().getString("economy.currency-symbol", "$");
+        return symbol + String.format(java.util.Locale.US, "%,.2f", amount);
+    }
+
+    public String getConfiguredCurrencyLabel() {
+        if (economyManager != null) {
+            return economyManager.getCurrencySymbol()
+                    + (economyManager.getProvider().equalsIgnoreCase("EconomyExpandNK")
+                    ? economyManager.getCurrencyId() : "dinero");
+        }
+        return getConfig().getString("economy.currency-symbol", "$") + "dinero";
+    }
+
     public BountyService getBountyService() {
         return bountyService;
     }
