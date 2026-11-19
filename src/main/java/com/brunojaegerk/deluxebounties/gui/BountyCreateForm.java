@@ -28,9 +28,7 @@ public final class BountyCreateForm {
         form.addElement(
                 "information",
                 new Header("§7Coloca una recompensa sobre otro jugador.\n"
-                        + "§8Se cobrará en " + plugin.getEconomyManager().getCurrencySymbol()
-                        + (plugin.getEconomyManager().getProvider().equalsIgnoreCase("EconomyExpandNK")
-                        ? plugin.getEconomyManager().getCurrencyId() : "dinero") + ".")
+                        + "§8Se cobrará en " + plugin.getConfiguredCurrencyLabel() + ".")
         );
 
         // Jugador objetivo
