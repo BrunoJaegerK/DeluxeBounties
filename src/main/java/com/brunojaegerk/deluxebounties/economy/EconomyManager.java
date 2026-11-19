@@ -90,6 +90,23 @@ public final class EconomyManager {
         }
     }
 
+    public String getProvider() {
+        return plugin.getConfig().getString("economy.provider", ECONOMY_API);
+    }
+
+    public String getCurrencyId() {
+        return plugin.getConfig().getString("economy.currency-id", "");
+    }
+
+    public String getCurrencySymbol() {
+        String provider = getProvider();
+        if (ECONOMY_EXPAND.equalsIgnoreCase(provider)) {
+            CurrencyOption option = getCurrencyOption(provider, getCurrencyId());
+            return option == null ? "" : option.getSymbol();
+        }
+        return plugin.getConfig().getString("economy.currency-symbol", "$");
+    }
+
     public List<CurrencyOption> getAvailableCurrencies() {
         return Collections.unmodifiableList(currencies);
     }
