@@ -106,7 +106,7 @@ public final class Main extends PluginBase {
         if (economyManager != null) {
             return economyManager.getCurrencySymbol()
                     + (economyManager.getProvider().equalsIgnoreCase("EconomyExpandNK")
-                    ? economyManager.getCurrencyId() : "dinero");
+                    ? " " + economyManager.getCurrencyId() : "dinero");
         }
         return getConfig().getString("economy.currency-symbol", "$") + "dinero";
     }
