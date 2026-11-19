@@ -137,6 +137,14 @@ public final class Main extends PluginBase {
         return symbol + String.format(java.util.Locale.US, "%,.2f", amount);
     }
 
+    public String formatAmount(double amount, String provider, String currencyId) {
+        if (economyManager != null) {
+            return economyManager.formatAmount(amount, provider, currencyId);
+        }
+        return getConfig().getString("economy.currency-symbol", "$")
+                + String.format(java.util.Locale.US, "%,.2f", amount);
+    }
+
     public String getConfiguredCurrencyLabel() {
         if (economyManager != null) {
             return economyManager.getCurrencySymbol()
