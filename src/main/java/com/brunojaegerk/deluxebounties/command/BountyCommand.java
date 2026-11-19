@@ -164,7 +164,7 @@ public final class BountyCommand extends Command {
 
             sender.sendMessage(
                     "§7Cantidad: §a"
-                            + String.format(Locale.US, "%,.2f", amount)
+                            + plugin.getEconomyManager().formatAmount(amount)
             );
 
             sender.sendMessage(
@@ -181,7 +181,7 @@ public final class BountyCommand extends Command {
 
             target.sendMessage(
                     "§7Cantidad añadida: §a"
-                            + String.format(Locale.US, "%,.2f", amount)
+                            + plugin.getEconomyManager().formatAmount(amount)
             );
 
         } catch (IllegalArgumentException | IllegalStateException exception) {
@@ -229,32 +229,32 @@ public final class BountyCommand extends Command {
                 return;
             }
 
-            double total = 0;
+            java.util.Map<String, Double> totalsByCurrency = new java.util.LinkedHashMap<>();
 
             sender.sendMessage("§5§lRecompensas de " + target.getName());
             sender.sendMessage("§7Recompensas activas:");
 
             for (Bounty bounty : bounties) {
-
-                total += bounty.getAmount();
+                String key = bounty.getCurrencyProvider() + "::" + bounty.getCurrencyId();
+                totalsByCurrency.merge(key, bounty.getAmount(), Double::sum);
 
                 sender.sendMessage(
                         "§8» §f#" + bounty.getId()
                                 + " §a"
-                                + String.format(
-                                Locale.US,
-                                "%,.2f",
-                                bounty.getAmount()
-                        )
+                                + plugin.formatAmount(bounty.getAmount(),
+                                bounty.getCurrencyProvider(), bounty.getCurrencyId())
                 );
             }
 
             sender.sendMessage("§7----------------------------");
-
-            sender.sendMessage(
-                    "§7Total acumulado: §a"
-                            + String.format(Locale.US, "%,.2f", total)
-            );
+            sender.sendMessage("§7Total por moneda:");
+            for (java.util.Map.Entry<String, Double> entry : totalsByCurrency.entrySet()) {
+                String[] currency = entry.getKey().split("::", 2);
+                String provider = currency[0];
+                String currencyId = currency.length > 1 ? currency[1] : "";
+                sender.sendMessage("§8» §a" + plugin.getEconomyManager().formatAmount(
+                        entry.getValue(), provider, currencyId));
+            }
 
         } catch (SQLException exception) {
 

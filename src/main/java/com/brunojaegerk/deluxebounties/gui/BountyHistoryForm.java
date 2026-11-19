@@ -86,11 +86,8 @@ public final class BountyHistoryForm {
             for (BountyHistoryEntry entry : history) {
 
                 String eventName = getEventName(entry.getEventType());
-                String amount = String.format(
-                        Locale.US,
-                        "%,.2f",
-                        entry.getAmount()
-                );
+                String amount = plugin.getEconomyManager()
+                        .formatAmount(entry.getAmount(), entry.getCurrencyProvider(), entry.getCurrencyId());
 
                 form.addButton(
                         eventName
@@ -138,11 +135,8 @@ public final class BountyHistoryForm {
             int page
     ) {
 
-        String amount = String.format(
-                Locale.US,
-                "%,.2f",
-                entry.getAmount()
-        );
+        String amount = plugin.getEconomyManager()
+                .formatAmount(entry.getAmount(), entry.getCurrencyProvider(), entry.getCurrencyId());
 
         SimpleDateFormat dateFormat = new SimpleDateFormat(
                 "dd/MM/yyyy HH:mm:ss"

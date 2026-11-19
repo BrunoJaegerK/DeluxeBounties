@@ -50,15 +50,26 @@ public final class Main extends PluginBase {
 
         // Inicializar EconomyAPI
         try {
-            economyManager = new EconomyManager();
+            economyManager = new EconomyManager(this);
 
-            getLogger().info("§aEconomyAPI conectada correctamente.");
+            java.util.List<String> availableEconomies = new java.util.ArrayList<>();
+            for (EconomyManager.CurrencyOption option : economyManager.getAvailableCurrencies()) {
+                if (economyManager.isAvailable(option.getProvider(), option.getCurrencyId())) {
+                    availableEconomies.add(option.getLabel());
+                }
+            }
+            if (availableEconomies.isEmpty()) {
+                getLogger().warning("No hay proveedores económicos disponibles. "
+                        + "Las recompensas no podrán crearse ni reclamarse.");
+            } else {
+                getLogger().info("§aEconomías disponibles: " + String.join(", ", availableEconomies));
+            }
 
         } catch (IllegalStateException exception) {
             economyManager = null;
 
             getLogger().warning(
-                    "EconomyAPI no está disponible. "
+                    "El proveedor económico no está disponible. "
                             + "Las operaciones económicas estarán desactivadas."
             );
         }
@@ -126,6 +137,31 @@ public final class Main extends PluginBase {
 
     public boolean isEconomyAvailable() {
         return economyManager != null;
+    }
+
+    public String formatAmount(double amount) {
+        if (economyManager != null) {
+            return economyManager.formatAmount(amount);
+        }
+        String symbol = getConfig().getString("economy.currency-symbol", "$");
+        return symbol + String.format(java.util.Locale.US, "%,.2f", amount);
+    }
+
+    public String formatAmount(double amount, String provider, String currencyId) {
+        if (economyManager != null) {
+            return economyManager.formatAmount(amount, provider, currencyId);
+        }
+        return getConfig().getString("economy.currency-symbol", "$")
+                + String.format(java.util.Locale.US, "%,.2f", amount);
+    }
+
+    public String getConfiguredCurrencyLabel() {
+        if (economyManager != null) {
+            return economyManager.getCurrencySymbol()
+                    + (economyManager.getProvider().equalsIgnoreCase("EconomyExpandNK")
+                    ? " " + economyManager.getCurrencyId() : "dinero");
+        }
+        return getConfig().getString("economy.currency-symbol", "$") + "dinero";
     }
 
     public BountyService getBountyService() {

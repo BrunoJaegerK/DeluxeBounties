@@ -77,11 +77,8 @@ public final class BountyMyForm {
 
                 Bounty bounty = bounties.get(i);
 
-                String amount = String.format(
-                        Locale.US,
-                        "%,.2f",
-                        bounty.getAmount()
-                );
+                String amount = plugin.getEconomyManager()
+                        .formatAmount(bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId());
 
                 form.addButton(
                         "§e#" + bounty.getId()
@@ -117,11 +114,8 @@ public final class BountyMyForm {
 
     private void showDetails(Player player, Bounty bounty) {
 
-        String amount = String.format(
-                Locale.US,
-                "%,.2f",
-                bounty.getAmount()
-        );
+        String amount = plugin.getEconomyManager()
+                .formatAmount(bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId());
 
         SimpleForm form = new SimpleForm(
                 "§5§lDetalle de recompensa"
@@ -156,11 +150,8 @@ public final class BountyMyForm {
 
     private void confirmCancellation(Player player, Bounty bounty) {
 
-        String amount = String.format(
-                Locale.US,
-                "%,.2f",
-                bounty.getAmount()
-        );
+        String amount = plugin.getEconomyManager().formatAmount(
+                bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId());
 
         ModalForm form = new ModalForm(
                 "§c§lCancelar recompensa",
