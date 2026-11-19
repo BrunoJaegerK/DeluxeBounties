@@ -299,7 +299,7 @@ public final class EconomyManager {
         public String getSymbol() { return symbol; }
         public String getLabel() {
             return ECONOMY_API.equals(provider)
-                    ? "EconomyAPI (" + symbol + ")"
+                    ? "Moneda (" + symbol + ")"
                     : name + " (" + symbol + ")";
         }
     }
