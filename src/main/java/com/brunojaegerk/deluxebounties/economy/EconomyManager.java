@@ -29,7 +29,7 @@ public final class EconomyManager {
         if ("EconomyExpandNK".equalsIgnoreCase(provider)) {
             Plugin dependency = plugin.getServer().getPluginManager()
                     .getPlugin("EconomyExpandNK");
-            if (dependency == null || !dependency.isEnabled()) {
+            if (dependency == null) {
                 throw new IllegalStateException(
                         "EconomyExpandNK no está instalado o no se encuentra habilitado."
                 );
