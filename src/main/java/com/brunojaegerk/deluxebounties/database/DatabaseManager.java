@@ -742,7 +742,6 @@ public final class DatabaseManager {
                 WHERE total_claims > 0
                 ORDER BY
                     total_claims DESC,
-                    total_earned DESC,
                     player_name ASC
                 LIMIT ?
                 """;
