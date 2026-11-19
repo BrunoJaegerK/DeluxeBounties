@@ -118,7 +118,7 @@ public final class BountyService {
 
         // Comprobar saldo
         if (!plugin.getEconomyManager().hasBalance(
-                creatorUUID, amount))
+                creatorUUID, amount)) {
 
             throw new IllegalStateException(
                     "No tienes suficiente dinero para esta recompensa."
