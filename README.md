@@ -248,18 +248,3 @@ Consulta el archivo [LICENSE](LICENSE) para más información.
 <p align="center">
   <b>DeluxeBounties</b> · Recompensa a tus objetivos. Conviértete en el mejor cazador.
 </p>
-
-## Selección de moneda por recompensa
-
-Al abrir la interfaz de creación, cada jugador puede elegir la moneda que desea aportar:
-
-- **EconomyAPI**: moneda principal, disponible con la instalación habitual.
-- **EconomyExpandNK**: aparecen automáticamente todas las monedas habilitadas en `currencies.yml` cuando el plugin está instalado.
-
-EconomyExpandNK es opcional. Si no está instalado, DeluxeBounties mantiene el funcionamiento con EconomyAPI y no muestra monedas secundarias. No es necesario configurar un ID de moneda global para utilizar el desplegable.
-
-Cada recompensa guarda su proveedor y su ID de moneda. Por eso, las recompensas creadas con monedas diferentes pueden coexistir; los pagos al cazador, reembolsos por cancelación y operaciones de recuperación utilizan la moneda original. Las recompensas antiguas de la base de datos se migran automáticamente como EconomyAPI.
-
-La creación por comando `/bounty <jugador> <cantidad>` conserva su compatibilidad y utiliza el proveedor predeterminado de `config.yml`; para elegir cualquier moneda, utiliza la interfaz.
-
-**Importante:** no deshabilites ni elimines una moneda de EconomyExpandNK mientras existan recompensas activas asociadas a ella. El proveedor y el ID deben seguir disponibles para poder pagar o reembolsar esas aportaciones.
