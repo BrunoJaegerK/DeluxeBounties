@@ -150,11 +150,8 @@ public final class BountyMyForm {
 
     private void confirmCancellation(Player player, Bounty bounty) {
 
-        String amount = String.format(
-                Locale.US,
-                "%,.2f",
-                bounty.getAmount()
-        );
+        String amount = plugin.getEconomyManager().formatAmount(
+                bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId());
 
         ModalForm form = new ModalForm(
                 "§c§lCancelar recompensa",
