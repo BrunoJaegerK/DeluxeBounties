@@ -113,9 +113,12 @@ public final class BountyService {
             );
         }
 
+        // Aplicar la precisión admitida por la moneda seleccionada.
+        amount = plugin.getEconomyManager().normalizeAmount(amount);
+
         // Comprobar saldo
         if (!plugin.getEconomyManager().hasBalance(
-                creatorUUID, amount)) {
+                creatorUUID, amount))
 
             throw new IllegalStateException(
                     "No tienes suficiente dinero para esta recompensa."
