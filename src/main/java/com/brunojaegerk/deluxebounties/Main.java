@@ -52,8 +52,18 @@ public final class Main extends PluginBase {
         try {
             economyManager = new EconomyManager(this);
 
-            getLogger().info("§aProveedor económico conectado: " + economyManager.getProvider()
-                    + (economyManager.getCurrencyId().isEmpty() ? "" : " (" + economyManager.getCurrencyId() + ")"));
+            java.util.List<String> availableEconomies = new java.util.ArrayList<>();
+            for (EconomyManager.CurrencyOption option : economyManager.getAvailableCurrencies()) {
+                if (economyManager.isAvailable(option.getProvider(), option.getCurrencyId())) {
+                    availableEconomies.add(option.getLabel());
+                }
+            }
+            if (availableEconomies.isEmpty()) {
+                getLogger().warning("No hay proveedores económicos disponibles. "
+                        + "Las recompensas no podrán crearse ni reclamarse.");
+            } else {
+                getLogger().info("§aEconomías disponibles: " + String.join(", ", availableEconomies));
+            }
 
         } catch (IllegalStateException exception) {
             economyManager = null;
