@@ -66,11 +66,7 @@ public final class BountyTopForm {
                             .append("\n");
 
                     content.append("  §7Dinero obtenido: §a")
-                            .append(String.format(
-                                    Locale.US,
-                                    "%,.2f",
-                                    hunter.getTotalEarned()
-                            ))
+                            .append(plugin.formatAmount(hunter.getTotalEarned()))
                             .append("\n\n");
                 }
             }
