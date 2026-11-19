@@ -393,13 +393,18 @@ public final class BountyService {
                         + provider + (currencyId.isEmpty() ? "" : "/" + currencyId)
                         + " de una recompensa activa. No se ha reclamado ninguna.");
             }
-            if (!plugin.getEconomyManager().deposit(
-                    hunterUUID, entry.getValue(), provider, currencyId)) {
+            try {
+                if (!plugin.getEconomyManager().deposit(
+                        hunterUUID, entry.getValue(), provider, currencyId)) {
+                    throw new IllegalStateException("No se pudo entregar una de las monedas "
+                            + "de las recompensas.");
+                }
+                paid.put(entry.getKey(), entry.getValue());
+            } catch (RuntimeException paymentException) {
                 rollbackClaimPayments(hunterUUID, hunterName, paid);
-                throw new IllegalStateException("No se pudo entregar una de las monedas "
-                        + "de las recompensas. No se ha reclamado ninguna.");
+                throw new IllegalStateException("No se pudo completar el pago de las recompensas. "
+                        + "Se revirtieron los pagos anteriores.", paymentException);
             }
-            paid.put(entry.getKey(), entry.getValue());
         }
 
         try {
