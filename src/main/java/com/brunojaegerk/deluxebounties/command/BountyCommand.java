@@ -241,7 +241,7 @@ public final class BountyCommand extends Command {
                 sender.sendMessage(
                         "§8» §f#" + bounty.getId()
                                 + " §a"
-                                + plugin.formatAmount(bounty.getAmount())
+                                + plugin.formatAmount(bounty.getAmount(), bounty.getCurrencyProvider(), bounty.getCurrencyId())
                 );
             }
 
