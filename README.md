@@ -144,7 +144,7 @@ Cada recompensa guarda su proveedor y el ID de la moneda elegida. Las recompensa
 
 Las recompensas guardadas antes de esta actualización se migran automáticamente y se consideran de EconomyAPI. No elimines ni deshabilites una moneda de EconomyExpandNK mientras existan recompensas activas que dependan de ella.
 
-El comando clásico `/bounty <jugador> <cantidad>` se mantiene y utiliza el proveedor predeterminado configurado en `economy.provider`; para elegir cualquier moneda, utiliza la interfaz.
+El comando clásico `/bounty <jugador> <cantidad>` se mantiene y utiliza el proveedor predeterminado configurado en `economy.provider` (y `economy.currency-id` si se configura EconomyExpandNK). Estos valores solo afectan al comando clásico: la interfaz siempre permite elegir la moneda de cada recompensa.
 
 #### Dependencia de ejecución
 
