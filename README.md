@@ -44,7 +44,8 @@ Utiliza **EconomyAPI** o **EconomyExpandNK** como proveedor económico configura
 |---|---|---|
 | NukkitPetteriM1Edition | API del servidor | Sí |
 | FormConstructor 3.1.0 | Formularios e interfaces | Sí |
-| EconomyAPI 2.0.7 | Operaciones económicas | Para funciones económicas |
+| EconomyAPI 2.0.7 | Economía principal | Si se selecciona EconomyAPI |
+| EconomyExpandNK | Monedas secundarias | Si se selecciona EconomyExpandNK |
 | H2 Database 2.1.214 | Almacenamiento de datos | Incluida en el plugin |
 
 **Importante:** EconomyAPI y EconomyExpandNK son dependencias opcionales. El proveedor elegido en `config.yml` debe estar instalado y habilitado; si no está disponible, el plugin inicia con las operaciones económicas desactivadas.
