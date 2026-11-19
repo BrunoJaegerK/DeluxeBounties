@@ -11,6 +11,8 @@ economy:
   # La interfaz permite elegir la moneda individualmente en cada recompensa.
   # EconomyExpandNK es opcional; sus monedas habilitadas aparecen automáticamente.
   provider: EconomyAPI
+  # Solo para el comando clásico cuando provider sea EconomyExpandNK.
+  currency-id: crystals
 
   # Símbolo utilizado para las operaciones de EconomyAPI.
   currency-symbol: "$"
