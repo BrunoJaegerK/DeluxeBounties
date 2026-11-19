@@ -2,54 +2,77 @@ package com.brunojaegerk.deluxebounties.economy;
 
 import cn.nukkit.plugin.Plugin;
 import com.brunojaegerk.deluxebounties.Main;
-import com.bruno.economyexpand.EconomyExpandNK;
-import com.bruno.economyexpand.api.Currency;
-import com.bruno.economyexpand.api.SecondaryEconomy;
 import me.onebone.economyapi.EconomyAPI;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Locale;
 import java.util.UUID;
 
 public final class EconomyManager {
 
     private final EconomyAPI economyAPI;
-    private final SecondaryEconomy secondaryEconomy;
+    private final Object secondaryEconomy;
+    private final Class<?> secondaryEconomyApi;
+    private final Object currency;
     private final String provider;
     private final String currencyId;
-    private final Currency currency;
 
     public EconomyManager(Main plugin) {
-        this.provider = plugin.getConfig().getString("economy.provider", "EconomyAPI")
-                .trim();
-        this.currencyId = plugin.getConfig().getString("economy.currency-id", "crystals")
-                .trim();
+        this.provider = plugin.getConfig()
+                .getString("economy.provider", "EconomyAPI").trim();
+        this.currencyId = plugin.getConfig()
+                .getString("economy.currency-id", "crystals").trim();
 
         if ("EconomyExpandNK".equalsIgnoreCase(provider)) {
             Plugin dependency = plugin.getServer().getPluginManager()
                     .getPlugin("EconomyExpandNK");
-
-            if (!(dependency instanceof EconomyExpandNK)) {
+            if (dependency == null || !dependency.isEnabled()) {
                 throw new IllegalStateException(
                         "EconomyExpandNK no está instalado o no se encuentra habilitado."
                 );
             }
 
-            this.secondaryEconomy = ((EconomyExpandNK) dependency).getEconomy();
-            if (this.secondaryEconomy == null) {
+            try {
+                ClassLoader loader = dependency.getClass().getClassLoader();
+                Class<?> pluginClass = dependency.getClass();
+                Object api = pluginClass.getMethod("getEconomy").invoke(dependency);
+                if (api == null) {
+                    throw new IllegalStateException(
+                            "La API de EconomyExpandNK todavía no está disponible."
+                    );
+                }
+
+                // Las llamadas se realizan mediante la interfaz pública, nunca
+                // directamente sobre la implementación interna del proveedor.
+                this.secondaryEconomyApi = Class.forName(
+                        "com.bruno.economyexpand.api.SecondaryEconomy", true, loader
+                );
+                this.secondaryEconomy = api;
+
+                this.currency = secondaryEconomyApi
+                        .getMethod("getCurrency", String.class)
+                        .invoke(secondaryEconomy, currencyId);
+
+                if (currency == null
+                        || !((Boolean) invokeCurrency("isEnabled")).booleanValue()) {
+                    throw new IllegalStateException(
+                            "La moneda '" + currencyId
+                                    + "' no existe o está deshabilitada en EconomyExpandNK."
+                    );
+                }
+
+                this.economyAPI = null;
+            } catch (IllegalStateException exception) {
+                throw exception;
+            } catch (ReflectiveOperationException exception) {
                 throw new IllegalStateException(
-                        "La API de EconomyExpandNK todavía no está disponible."
+                        "No se pudo conectar con la API pública de EconomyExpandNK.",
+                        unwrap(exception)
                 );
             }
-
-            this.currency = secondaryEconomy.getCurrency(currencyId);
-            if (currency == null || !currency.isEnabled()) {
-                throw new IllegalStateException(
-                        "La moneda '" + currencyId
-                                + "' no existe o está deshabilitada en EconomyExpandNK."
-                );
-            }
-
-            this.economyAPI = null;
         } else if ("EconomyAPI".equalsIgnoreCase(provider)) {
             this.economyAPI = EconomyAPI.getInstance();
             if (this.economyAPI == null) {
@@ -57,6 +80,7 @@ public final class EconomyManager {
             }
 
             this.secondaryEconomy = null;
+            this.secondaryEconomyApi = null;
             this.currency = null;
         } else {
             throw new IllegalStateException(
@@ -71,23 +95,26 @@ public final class EconomyManager {
     }
 
     public String getCurrencyId() {
-        return currencyId;
+        return "EconomyExpandNK".equalsIgnoreCase(provider) ? currencyId : "";
     }
 
     public String getCurrencySymbol() {
-        return currency != null
-                ? currency.getSymbol()
-                : Main.getInstance().getConfig().getString("economy.currency-symbol", "$");
+        if (currency != null) {
+            return String.valueOf(invokeCurrency("getSymbol"));
+        }
+        return Main.getInstance().getConfig()
+                .getString("economy.currency-symbol", "$");
     }
 
     public String formatAmount(double amount) {
         if (currency != null) {
-            return getCurrencySymbol()
-                    + currency.format(BigDecimal.valueOf(amount));
+            return getCurrencySymbol() + invokeCurrency("format",
+                    new Class<?>[]{BigDecimal.class},
+                    new Object[]{BigDecimal.valueOf(amount)});
         }
 
         return getCurrencySymbol()
-                + String.format(java.util.Locale.US, "%,.2f", amount);
+                + String.format(Locale.US, "%,.2f", amount);
     }
 
     public double normalizeAmount(double amount) {
@@ -95,13 +122,14 @@ public final class EconomyManager {
             return amount;
         }
 
+        int decimals = ((Number) invokeCurrency("getDecimals")).intValue();
         BigDecimal original = BigDecimal.valueOf(amount);
-        BigDecimal normalized = currency.normalize(original);
+        BigDecimal normalized = original.setScale(decimals, RoundingMode.DOWN);
         if (normalized.compareTo(original) != 0) {
+            String name = String.valueOf(invokeCurrency("getName"));
             throw new IllegalArgumentException(
-                    "La moneda " + currency.getName()
-                            + " admite como máximo " + currency.getDecimals()
-                            + " decimales."
+                    "La moneda " + name + " admite como máximo "
+                            + decimals + " decimales."
             );
         }
         return normalized.doubleValue();
@@ -113,7 +141,11 @@ public final class EconomyManager {
         }
 
         if (secondaryEconomy != null) {
-            return secondaryEconomy.getBalance(playerUUID, currencyId).doubleValue();
+            return ((BigDecimal) invokeEconomy(
+                    "getBalance",
+                    new Class<?>[]{UUID.class, String.class},
+                    new Object[]{playerUUID, currencyId}
+            )).doubleValue();
         }
 
         if (!economyAPI.hasAccount(playerUUID)) {
@@ -136,8 +168,10 @@ public final class EconomyManager {
         }
 
         if (secondaryEconomy != null) {
-            return secondaryEconomy.withdraw(
-                    playerUUID, currencyId, BigDecimal.valueOf(amount)
+            return (Boolean) invokeEconomy(
+                    "withdraw",
+                    new Class<?>[]{UUID.class, String.class, BigDecimal.class},
+                    new Object[]{playerUUID, currencyId, BigDecimal.valueOf(amount)}
             );
         }
 
@@ -150,12 +184,59 @@ public final class EconomyManager {
         }
 
         if (secondaryEconomy != null) {
-            return secondaryEconomy.deposit(
-                    playerUUID, currencyId, BigDecimal.valueOf(amount)
+            return (Boolean) invokeEconomy(
+                    "deposit",
+                    new Class<?>[]{UUID.class, String.class, BigDecimal.class},
+                    new Object[]{playerUUID, currencyId, BigDecimal.valueOf(amount)}
             );
         }
 
         return economyAPI.addMoney(playerUUID, amount) == EconomyAPI.RET_SUCCESS;
+    }
+
+    private Object invokeEconomy(
+            String method,
+            Class<?>[] parameterTypes,
+            Object[] arguments
+    ) {
+        try {
+            Method apiMethod = secondaryEconomyApi.getMethod(method, parameterTypes);
+            return apiMethod.invoke(secondaryEconomy, arguments);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException(
+                    "Falló la operación '" + method + "' en EconomyExpandNK.",
+                    unwrap(exception)
+            );
+        }
+    }
+
+    private Object invokeCurrency(String method) {
+        return invokeCurrency(method, new Class<?>[0], new Object[0]);
+    }
+
+    private Object invokeCurrency(
+            String method,
+            Class<?>[] parameterTypes,
+            Object[] arguments
+    ) {
+        try {
+            Method currencyMethod = currency.getClass()
+                    .getMethod(method, parameterTypes);
+            return currencyMethod.invoke(currency, arguments);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException(
+                    "No se pudo consultar la moneda configurada en EconomyExpandNK.",
+                    unwrap(exception)
+            );
+        }
+    }
+
+    private static Throwable unwrap(ReflectiveOperationException exception) {
+        if (exception instanceof InvocationTargetException
+                && ((InvocationTargetException) exception).getCause() != null) {
+            return ((InvocationTargetException) exception).getCause();
+        }
+        return exception;
     }
 
     private boolean isValidAmount(double amount) {
