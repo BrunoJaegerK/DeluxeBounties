@@ -21,6 +21,19 @@ public final class BountyService {
         this.databaseManager = plugin.getDatabaseManager();
     }
 
+    /**
+     * Backwards-compatible entry point used by the legacy command.
+     * It uses the configured default provider; the GUI passes its own selection.
+     */
+    public Bounty createBounty(UUID targetUUID, String targetName,
+            UUID creatorUUID, String creatorName, double amount,
+            boolean anonymous) throws SQLException {
+        String provider = plugin.getConfig().getString("economy.provider", "EconomyAPI");
+        String currencyId = plugin.getConfig().getString("economy.currency-id", "");
+        return createBounty(targetUUID, targetName, creatorUUID, creatorName,
+                amount, provider, currencyId, anonymous);
+    }
+
     public Bounty createBounty(
             UUID targetUUID,
             String targetName,
