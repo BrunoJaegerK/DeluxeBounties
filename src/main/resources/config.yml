@@ -7,7 +7,15 @@ database:
   file: "bounties"
 
 economy:
+  # Proveedores disponibles: EconomyAPI, EconomyExpandNK
+  # EconomyAPI conserva el comportamiento predeterminado.
   provider: EconomyAPI
+
+  # Solo se utiliza cuando provider es EconomyExpandNK.
+  # Debe coincidir con el ID de una moneda habilitada en currencies.yml.
+  currency-id: crystals
+
+  # Símbolo mostrado cuando se utiliza EconomyAPI.
   currency-symbol: "$"
 
 bounty:
