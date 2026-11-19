@@ -85,11 +85,8 @@ public final class BountyListForm {
                         ? "§8Anónimo"
                         : "§f" + bounty.getCreatorName();
 
-                String amount = String.format(
-                        Locale.US,
-                        "%,.2f",
-                        bounty.getAmount()
-                );
+                String amount = plugin.getEconomyManager()
+                        .formatAmount(bounty.getAmount());
 
                 String buttonText =
                         "§e" + bounty.getTargetName()
@@ -136,11 +133,8 @@ public final class BountyListForm {
                 ? "§8Anónimo"
                 : "§f" + bounty.getCreatorName();
 
-        String amount = String.format(
-                Locale.US,
-                "%,.2f",
-                bounty.getAmount()
-        );
+        String amount = plugin.getEconomyManager()
+                .formatAmount(bounty.getAmount());
 
         player.sendMessage("§5§m-------------------------");
         player.sendMessage("§d§lDETALLES DE RECOMPENSA");
