@@ -153,16 +153,9 @@ El proveedor seleccionado se utiliza para cobrar las nuevas recompensas, pagar a
 
 **Importante:** mantén el mismo proveedor y el mismo `currency-id` mientras existan recompensas activas. Las recompensas guardadas actualmente no almacenan un ID de moneda individual; cambiar el proveedor con recompensas activas podría provocar que su cobro o pago se realice en la nueva moneda.
 
-#### Dependencia de compilación
+#### Dependencia de ejecución
 
-Para compilar con soporte de EconomyExpandNK, coloca el JAR de su API en:
-
-```text
-libs/
-└── EconomyExpandNK.jar
-```
-
-Este JAR se utiliza únicamente para compilar. No se incluye dentro de DeluxeBounties; EconomyExpandNK debe estar instalado por separado en el servidor. Puedes obtenerlo compilando el repositorio [EconomyExpandNK](https://github.com/BrunoJaegerK/EconomyExpandNK).
+EconomyExpandNK es una dependencia opcional en tiempo de ejecución. No necesitas añadir su JAR a `libs/` ni incluir sus clases dentro de DeluxeBounties. Instala el plugin por separado y DeluxeBounties accederá a su API pública cuando se seleccione como proveedor.
 
 ### Opciones principales
 
