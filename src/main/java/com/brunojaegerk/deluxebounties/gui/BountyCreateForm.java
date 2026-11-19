@@ -8,7 +8,7 @@ import com.formconstructor.form.CustomForm;
 import com.formconstructor.form.element.general.Header;
 import com.formconstructor.form.element.custom.Input;
 import com.formconstructor.form.element.custom.Toggle;
-import com.formconstructor.form.element.custom.Dropdown;
+import com.formconstructor.form.element.custom.StepSlider;
 import com.formconstructor.form.element.SelectableElement;
 import com.formconstructor.form.response.CustomFormResponse;
 
@@ -46,7 +46,7 @@ public final class BountyCreateForm {
             return;
         }
 
-        form.addElement("currency", new Dropdown("§fMoneda de pago", options, 0));
+        form.addElement("currency", new StepSlider("§fMoneda", options, 0));
         form.addElement("amount", new Input("§fCantidad de dinero")
                 .setPlaceholder("Ejemplo: 5000"));
         form.addElement("anonymous", new Toggle("§dPublicar anónimamente", false));
@@ -59,7 +59,7 @@ public final class BountyCreateForm {
     private void handleSubmission(Player player, CustomFormResponse response) {
         String targetName = response.getInput("target").getValue();
         String amountText = response.getInput("amount").getValue();
-        SelectableElement selected = response.getDropdown("currency").getValue();
+        SelectableElement selected = response.getStepSlider("currency").getValue();
         boolean anonymous = response.getToggle("anonymous").getValue();
 
         if (targetName == null || targetName.isBlank()) {
