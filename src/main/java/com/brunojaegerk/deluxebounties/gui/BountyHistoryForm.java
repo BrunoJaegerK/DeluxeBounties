@@ -87,7 +87,7 @@ public final class BountyHistoryForm {
 
                 String eventName = getEventName(entry.getEventType());
                 String amount = plugin.getEconomyManager()
-                        .formatAmount(entry.getAmount());
+                        .formatAmount(entry.getAmount(), entry.getCurrencyProvider(), entry.getCurrencyId());
 
                 form.addButton(
                         eventName
@@ -136,7 +136,7 @@ public final class BountyHistoryForm {
     ) {
 
         String amount = plugin.getEconomyManager()
-                .formatAmount(entry.getAmount());
+                .formatAmount(entry.getAmount(), entry.getCurrencyProvider(), entry.getCurrencyId());
 
         SimpleDateFormat dateFormat = new SimpleDateFormat(
                 "dd/MM/yyyy HH:mm:ss"
