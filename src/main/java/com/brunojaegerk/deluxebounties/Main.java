@@ -59,7 +59,7 @@ public final class Main extends PluginBase {
             economyManager = null;
 
             getLogger().warning(
-                    "EconomyAPI no está disponible. "
+                    "El proveedor económico no está disponible. "
                             + "Las operaciones económicas estarán desactivadas."
             );
         }
