@@ -43,7 +43,7 @@ public final class EconomyManager {
         Plugin dependency = plugin.getServer().getPluginManager()
                 .getPlugin(ECONOMY_EXPAND);
 
-        if (dependency != null && dependency.isEnabled()) {
+        if (dependency != null) {
             try {
                 ClassLoader loader = dependency.getClass().getClassLoader();
                 api = dependency.getClass().getMethod("getEconomy").invoke(dependency);
