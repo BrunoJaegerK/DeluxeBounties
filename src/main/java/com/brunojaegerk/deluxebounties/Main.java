@@ -1,3 +1,4 @@
+
 package com.brunojaegerk.deluxebounties;
 
 import cn.nukkit.plugin.PluginBase;
@@ -20,6 +21,7 @@ public final class Main extends PluginBase {
     @Override
     public void onEnable() {
         instance = this;
+
         saveDefaultResources();
 
         getLogger().info("§d================================");
@@ -27,49 +29,82 @@ public final class Main extends PluginBase {
         getLogger().info("§7  Advanced Bounty System");
         getLogger().info("§d================================");
 
+        // Inicializar H2
         try {
             databaseManager = new DatabaseManager(this);
             databaseManager.initialize();
+
             getLogger().info("§aBase de datos H2 inicializada.");
+
         } catch (SQLException exception) {
-            getLogger().error("No se pudo inicializar DeluxeBounties.", exception);
-            throw new IllegalStateException("Error al inicializar la base de datos.", exception);
+            getLogger().error(
+                    "No se pudo inicializar DeluxeBounties.",
+                    exception
+            );
+
+            throw new IllegalStateException(
+                    "Error al inicializar la base de datos.",
+                    exception
+            );
         }
 
+        // Inicializar EconomyAPI
         try {
             economyManager = new EconomyManager(this);
-            getLogger().info("§aEconomía conectada: "
-                    + economyManager.getProvider()
-                    + (economyManager.getCurrencyId().isEmpty()
-                    ? "" : " (" + economyManager.getCurrencyId() + ")"));
+
+            getLogger().info("§aProveedor económico conectado: " + economyManager.getProvider()
+                    + (economyManager.getCurrencyId().isEmpty() ? "" : " (" + economyManager.getCurrencyId() + ")"));
+
         } catch (IllegalStateException exception) {
             economyManager = null;
+
             getLogger().warning(
-                    "No se pudo inicializar el proveedor económico: "
-                            + exception.getMessage()
-                            + " Las operaciones económicas estarán desactivadas."
+                    "EconomyAPI no está disponible. "
+                            + "Las operaciones económicas estarán desactivadas."
             );
         }
 
         bountyService = new BountyService(this);
 
-        getServer().getPluginManager().registerEvents(new BountyListener(this), this);
-        getServer().getCommandMap().register("deluxebounties", new BountyCommand(this));
+        getLogger().info("§aBountyService inicializado correctamente.");
+
+        getServer().getPluginManager().registerEvents(
+                new BountyListener(this),
+                this
+        );
+
+        getLogger().info("§aBountyListener registrado correctamente.");
 
         getLogger().info("§aDeluxeBounties habilitado correctamente.");
-        getLogger().info("§7Versión: " + getDescription().getVersion());
+        getLogger().info(
+                "§7Versión: " + getDescription().getVersion()
+        );
+
+        getServer().getCommandMap().register(
+                "deluxebounties",
+                new BountyCommand(this)
+        );
+
+        getLogger().info("§aComando /bounty registrado correctamente.");
     }
 
     @Override
     public void onDisable() {
+
         if (databaseManager != null) {
             try {
                 databaseManager.close();
+
             } catch (SQLException exception) {
-                getLogger().error("Error al cerrar la base de datos.", exception);
+                getLogger().error(
+                        "Error al cerrar la base de datos.",
+                        exception
+                );
             }
         }
+
         getLogger().info("§cDeluxeBounties deshabilitado.");
+
         instance = null;
     }
 
@@ -115,3 +150,6 @@ public final class Main extends PluginBase {
         return bountyService;
     }
 }
+
+
+
