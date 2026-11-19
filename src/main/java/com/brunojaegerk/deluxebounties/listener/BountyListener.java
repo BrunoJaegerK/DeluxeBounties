@@ -67,7 +67,7 @@ public final class BountyListener implements Listener {
 
             hunter.sendMessage(
                     "§7Dinero obtenido: §a+"
-                            + plugin.getEconomyManager().formatAmount(result.getTotalEarned())
+                            + result.getTotalClaims() + " recompensa(s) procesada(s) en su moneda original"
             );
 
             victim.sendMessage(
