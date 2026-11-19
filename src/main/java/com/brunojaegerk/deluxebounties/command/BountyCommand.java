@@ -164,7 +164,7 @@ public final class BountyCommand extends Command {
 
             sender.sendMessage(
                     "§7Cantidad: §a"
-                            + String.format(Locale.US, "%,.2f", amount)
+                            + plugin.getEconomyManager().formatAmount(amount)
             );
 
             sender.sendMessage(
@@ -181,7 +181,7 @@ public final class BountyCommand extends Command {
 
             target.sendMessage(
                     "§7Cantidad añadida: §a"
-                            + String.format(Locale.US, "%,.2f", amount)
+                            + plugin.getEconomyManager().formatAmount(amount)
             );
 
         } catch (IllegalArgumentException | IllegalStateException exception) {
