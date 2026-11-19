@@ -241,11 +241,7 @@ public final class BountyCommand extends Command {
                 sender.sendMessage(
                         "§8» §f#" + bounty.getId()
                                 + " §a"
-                                + String.format(
-                                Locale.US,
-                                "%,.2f",
-                                bounty.getAmount()
-                        )
+                                + plugin.formatAmount(bounty.getAmount())
                 );
             }
 
@@ -253,7 +249,7 @@ public final class BountyCommand extends Command {
 
             sender.sendMessage(
                     "§7Total acumulado: §a"
-                            + String.format(Locale.US, "%,.2f", total)
+                            + plugin.formatAmount(total)
             );
 
         } catch (SQLException exception) {
